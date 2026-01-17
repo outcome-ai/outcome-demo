@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outcome AI — VIN-First Dashboard</title>
+  <style>
+    :root{
+      --bg:#1a2230; --bg2:#141b27;
+      --text:#eef3fb; --text2:rgba(238,243,251,.92); --muted:rgba(215,224,236,.72);
+      --accent:#6aa6ff; --good:#3ee08f; --warn:#ffcf5a; --bad:#ff5a6a;
+      --shadow: 0 18px 70px rgba(0,0,0,.45); --shadow2: 0 10px 40px rgba(0,0,0,.30);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 50% -240px, rgba(106,166,255,.20), transparent 60%),
+        radial-gradient(900px 500px at 12% 120%, rgba(62,224,143,.12), transparent 55%),
+        radial-gradient(900px 500px at 88% 120%, rgba(255,90,106,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+    }
+    .top{position:sticky; top:0; z-index:10; backdrop-filter: blur(12px);
+      background: linear-gradient(180deg, rgba(20,25,34,.78), rgba(20,25,34,.55));
+      border-bottom:1px solid rgba(255,255,255,.08);}
+    .top .inner{max-width:1120px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;}
+    .brand{display:flex; align-items:center; gap:12px; min-width:220px;}
+    .mark{width:30px; height:30px; border-radius:10px;border:1px solid rgba(255,255,255,.16);
+      background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04));
+      position:relative; overflow:hidden; box-shadow: var(--shadow2);}
+    .mark::after{content:"";position:absolute;inset:-20px;background:
+      radial-gradient(18px 18px at 35% 35%, rgba(106,166,255,.58), transparent 60%),
+      radial-gradient(20px 20px at 70% 70%, rgba(62,224,143,.34), transparent 62%);
+      opacity:.95;transform: rotate(10deg);mix-blend-mode: screen;}
+    .brand .name{display:flex; flex-direction:column; gap:2px;}
+    .brand .name strong{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);}
+    .brand .name span{font-size:12px;color:var(--muted);}
+    .topright{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:9px 10px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);font-size:12px;color:var(--text2);white-space:nowrap;cursor:default;}
+    .pill.clickable{cursor:pointer}
+    .pill.clickable:hover{border-color:rgba(255,255,255,.20); background:rgba(255,255,255,.07)}
+    .dot{width:7px;height:7px;border-radius:50%}
+    .dot.good{background:var(--good)}
+    .dot.warn{background:var(--warn)}
+    .dot.bad{background:var(--bad)}
+    .dot.neutral{background:rgba(255,255,255,.28)}
+    .vinStatusWrap{display:inline-flex;align-items:center;gap:8px}
+    .vinStatusDot{width:9px;height:9px;box-shadow:0 0 0 2px rgba(0,0,0,.18)}
+    .wrap{max-width:1120px;margin:0 auto;padding:26px 18px 40px;}
+    .hero{margin-top:18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;}
+    .hero h1{margin:0;font-size:28px;line-height:1.15;font-weight:720;color:var(--text2);}
+    .hero p{margin:0;max-width:760px;font-size:14px;color:var(--muted);line-height:1.6;}
+    .vinbox{width:min(860px, 100%);margin-top:6px;border-radius:22px;border:1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));box-shadow: var(--shadow);overflow:hidden;}
+    .vinrow{display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid rgba(255,255,255,.08);background: rgba(255,255,255,.06);}
+    .vinlabel{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(238,243,251,.72);padding:8px 10px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);background: rgba(255,255,255,.04);}
+    .vinrow input{flex:1;background: transparent;border:none;outline:none;color:var(--text2);font-family: var(--mono);font-size:15px;letter-spacing:.04em;padding:10px 6px;}
+    .vinrow input::placeholder{color:rgba(215,224,236,.62)}
+    .dialwrap{display:flex; align-items:center; gap:10px; padding-left:6px;}
+    .dial{width:40px; height:40px; border-radius:999px; position:relative; display:grid; place-items:center;
+      border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); box-shadow: 0 10px 24px rgba(0,0,0,.25);}
+    .dial svg{position:absolute; inset:0}
+    .dial .center{width:26px;height:26px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background: rgba(255,255,255,.06);
+      display:grid; place-items:center;font-size:11px;font-weight:700;letter-spacing:.08em;color:rgba(238,243,251,.90);}
+    .dialmeta{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:124px;}
+    .dialmeta .l{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(238,243,251,.66);}
+    .dialmeta .v{font-size:12px;color:rgba(238,243,251,.92);}
+    .btnbar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:14px;}
+    .btn{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;min-height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);color:var(--text2);font-size:13px;cursor:pointer;user-select:none;transition: transform .08s ease, background .12s ease, border-color .12s ease;}
+    .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.22)}
+    .btn.primary{background: rgba(106,166,255,.18); border-color: rgba(106,166,255,.36);} .btn.primary:hover{background:rgba(106,166,255,.22)}
+    .ico{width:18px;height:18px;border-radius:7px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.18);background: rgba(255,255,255,.06);font-size:11px;color:rgba(238,243,251,.90);}
+    .below{width:min(1040px, 100%);margin:18px auto 0;display:grid;grid-template-columns: repeat(3, 1fr);gap:12px;}
+    @media (max-width: 980px){ .below{grid-template-columns:1fr} .hero h1{font-size:24px} .dialmeta{display:none} }
+    .tile{border-radius:18px;border:1px solid rgba(255,255,255,.12);background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      padding:14px;box-shadow: var(--shadow2);cursor:pointer;transition: transform .08s ease, border-color .12s ease, background .12s ease;min-height:98px;position:relative;overflow:hidden;}
+    .tile:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.18); background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.035));}
+    .chip{position:absolute; top:12px; right:12px;font-size:11px;padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);color:rgba(238,243,251,.88);}
+    .chip.good{border-color:rgba(62,224,143,.34); background:rgba(62,224,143,.12)}
+    .chip.warn{border-color:rgba(255,207,90,.34); background:rgba(255,207,90,.12)}
+    .chip.bad{border-color:rgba(255,90,106,.34); background:rgba(255,90,106,.12)}
+    .tile .t{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.74);}
+    .tile .v{margin-top:10px;font-size:22px;font-weight:760;color:var(--text2);letter-spacing:.02em;}
+    .tile .m{margin-top:6px;font-size:12px;color:rgba(215,224,236,.78);line-height:1.35;}
+    .hintline{margin-top:10px;font-size:12px;color:rgba(215,224,236,.78);}
+    .hintline code{font-family:var(--mono);padding:2px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background: rgba(255,255,255,.06);color:rgba(238,243,251,.90);}
+    .modal{position:fixed; inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:50;}
+    .modal.open{display:flex}
+    /*
+      Modal scrolling
+      - Keep the header fixed
+      - Allow the modal body to scroll when content exceeds viewport
+      (Fixes the Governance modal appearing "locked" with no scroll.)
+    */
+    .sheet{width:min(1040px, 100%);border-radius:22px;border:1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(26,33,48,.96), rgba(22,28,40,.92));box-shadow: 0 30px 90px rgba(0,0,0,.60);
+      overflow:hidden; max-height: calc(100vh - 44px); display:flex; flex-direction:column;}
+    .shd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.10);background: rgba(255,255,255,.04);}
+    .hwrap{display:flex;align-items:flex-start;gap:10px;}
+    .back{display:none;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background: rgba(255,255,255,.06);color: rgba(238,243,251,.92);cursor:pointer;font-size:13px;min-width:76px;}
+    .back.show{display:inline-flex; align-items:center; gap:8px;}
+    .shd .h{display:flex;flex-direction:column;gap:3px;}
+    .shd .h strong{font-size:13px;letter-spacing:.14em;text-transform:uppercase;}
+    .shd .h span{font-size:12px;color:rgba(215,224,236,.84);font-family:var(--mono)}
+    .close{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background: rgba(255,255,255,.06);color: rgba(238,243,251,.92);cursor:pointer;font-size:13px;}
+    .sbd{padding:16px;display:grid;grid-template-columns: 1.15fr .85fr;gap:14px;
+      overflow:auto; flex:1; min-height:0;}
+    @media (max-width: 980px){ .sbd{grid-template-columns:1fr} }
+    .panel{border:1px solid rgba(255,255,255,.12);border-radius:18px;background: rgba(255,255,255,.04);padding:14px;}
+    .ph{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+    .ph .t{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.74);}
+    .badge{font-size:11px;padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background: rgba(255,255,255,.04);color:rgba(238,243,251,.90);white-space:nowrap;}
+    .badge.good{border-color:rgba(62,224,143,.34); background:rgba(62,224,143,.12)}
+    .badge.warn{border-color:rgba(255,207,90,.34); background:rgba(255,207,90,.12)}
+    .badge.bad{border-color:rgba(255,90,106,.34); background:rgba(255,90,106,.12)}
+
+    /* Mini percent chip inside the Buy Decision confidence pill */
+    .pctMini{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-variant-numeric: tabular-nums;
+      font-weight: 900;
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.20);
+      color: rgba(255,255,255,.92);
+    }
+
+    /* Buy Decision (vetted layout) */
+    .bdGrid{display:grid;grid-template-columns: 1.2fr 1fr;gap:12px;}
+    @media (max-width: 980px){ .bdGrid{grid-template-columns:1fr} }
+    .bdPanel{border:1px solid rgba(255,255,255,.12);border-radius:18px;background: rgba(0,0,0,.18);padding:12px;}
+    .bdHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+    .bdLabel{font-weight:950;letter-spacing:.14em;text-transform:uppercase;font-size:12px;color:rgba(238,243,251,.86);}
+    .bdPill{padding:10px 12px;}
+    .bdHint{margin:8px 0 10px;color:rgba(215,224,236,.78);font-size:12px;line-height:1.45;}
+    .bdCards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 10px;}
+    @media (max-width: 980px){ .bdCards{grid-template-columns:1fr} }
+    .bdCard{border:1px solid rgba(255,255,255,.10);border-radius:16px;background: rgba(255,255,255,.03);padding:12px;}
+    .bdCardTitle{font-weight:950;letter-spacing:.02em;color:rgba(238,243,251,.92);}
+    .bdCardSub{margin-top:4px;color:rgba(215,224,236,.80);font-size:12px;line-height:1.35;}
+    .bdCardMono{margin-top:4px;font-family:var(--mono);font-variant-numeric:tabular-nums;color:rgba(238,243,251,.92);font-size:14px;}
+    .bdBars{display:flex;flex-direction:column;gap:10px;margin:10px 0 12px;}
+    .bdBarRow{display:grid;grid-template-columns: 260px 1fr 56px;gap:10px;align-items:center;}
+    @media (max-width: 720px){ .bdBarRow{grid-template-columns:1fr} }
+    .bdBarName{font-size:12px;color:rgba(215,224,236,.84);font-weight:950;}
+    .bdTrack{height:10px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background: rgba(0,0,0,.22);overflow:hidden;}
+    .bdFill{height:100%;border-radius:999px;background: rgba(106,166,255,.92);}
+    .bdPct{text-align:right;font-size:12px;color:rgba(238,243,251,.90);font-family:var(--mono);}
+    .bdCallout{border:1px solid rgba(255,255,255,.10);background: rgba(0,0,0,.18);border-radius:16px;padding:12px;}
+    .bdCallTitle{font-weight:950;margin-bottom:6px;color:rgba(238,243,251,.92)}
+    .bdBullets{margin:0;padding-left:18px;color:rgba(215,224,236,.80);font-size:12px;line-height:1.55;}
+    .bdBullets li{margin:4px 0;}
+    .bdFooter{margin-top:12px;color:rgba(215,224,236,.78);font-size:12px;line-height:1.45;}
+    .bdTwo{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    @media (max-width: 980px){ .bdTwo{grid-template-columns:1fr} }
+    .bdStat{margin-top:6px;color:rgba(215,224,236,.80);font-size:12px;line-height:1.35;}
+    .bdTiny{margin-top:6px;color:rgba(215,224,236,.55);font-size:12px;line-height:1.35;}
+    .bdDivider{height:1px;background:rgba(255,255,255,.08);margin:12px 0;}
+    .kv{display:grid;grid-template-columns: 1fr 1fr;gap:10px;margin-top:10px;}
+    @media (max-width:520px){ .kv{grid-template-columns:1fr} }
+    .k{border:1px solid rgba(255,255,255,.10);border-radius:14px;background: rgba(255,255,255,.04);padding:10px;}
+    .k .l{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.66);}
+    .k .v{margin-top:6px;font-size:16px;font-weight:760;color:rgba(238,243,251,.95);}
+    .k .s{margin-top:6px;font-size:12px;color:rgba(215,224,236,.80);line-height:1.35;}
+    .muted{color:rgba(215,224,236,.82)}
+    .table{width:100%;border-collapse:separate;border-spacing:0;margin-top:10px;border:1px solid rgba(255,255,255,.10);border-radius:14px;overflow:hidden;}
+    .table th,.table td{padding:10px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.07);}
+    .table th{text-align:left;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.72);background: rgba(255,255,255,.05);}
+    .table tr:last-child td{border-bottom:none}
+    .foot{margin-top:10px;font-size:12px;color:rgba(215,224,236,.82);line-height:1.55;}
+    .chiprow{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+    .qchip{display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04); font-size:12px; color:rgba(238,243,251,.88); white-space:nowrap;}
+    .qchip.good{border-color:rgba(62,224,143,.34); background:rgba(62,224,143,.10)}
+    .qchip.warn{border-color:rgba(255,207,90,.34); background:rgba(255,207,90,.10)}
+    .qchip.bad{border-color:rgba(255,90,106,.34); background:rgba(255,90,106,.10)}
+    .help{margin-top:18px;text-align:center;font-size:12px;color:rgba(215,224,236,.66);}
+    .help kbd{font-family:var(--mono);font-size:11px;padding:3px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background: rgba(255,255,255,.04);color:rgba(238,243,251,.88);}
+    .sheet.small{width:min(520px,100%);}
+    .field{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+    .field label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.70)}
+    .field input, .field textarea{border-radius:14px;border:1px solid rgba(255,255,255,.14);background: rgba(255,255,255,.05);color: rgba(238,243,251,.92);
+      font-family: var(--mono);font-size:14px;padding:10px 12px;outline:none;}
+    .field textarea{min-height:92px;resize:vertical;}
+    .row{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;}
+    .minihelp{font-size:12px;color:rgba(215,224,236,.78);line-height:1.5;margin-top:10px;}
+  
+    /* Buy Decision — Should We Really Buy This Car? (kept intentionally minimal to avoid clutter) */
+    .govGrid{display:grid;grid-template-columns: 1.05fr .95fr;gap:14px;}
+    @media (max-width: 980px){.govGrid{grid-template-columns:1fr}}
+    .govStack{display:flex;flex-direction:column;gap:10px;margin-top:10px;}
+    .govRow{display:grid;grid-template-columns: 160px 1fr 56px;gap:10px;align-items:center;}
+    .govLabel{font-size:12px;color:rgba(215,224,236,.82);font-weight:700;}
+    .govTrack{height:10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background: rgba(255,255,255,.04);overflow:hidden;}
+    .govFill{height:100%;border-radius:999px;background: rgba(106,166,255,.92);}
+    .govPct{text-align:right;font-family:var(--mono);font-size:12px;color:rgba(238,243,251,.90);}
+    .miniList{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+    .miniItem{border:1px solid rgba(255,255,255,.10);border-radius:14px;background: rgba(255,255,255,.04);padding:10px;}
+    .miniItem .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;position:static;backdrop-filter:none;background:none;border:none;}
+    .miniItem .name{font-size:12px;font-weight:760;color:rgba(238,243,251,.92);letter-spacing:.02em;}
+    .miniItem .meta{margin-top:6px;font-size:12px;color:rgba(215,224,236,.80);line-height:1.4;}
+    .govHint{margin-top:10px;font-size:12px;color:rgba(215,224,236,.78);line-height:1.55;}
+    .toggleLink{font-size:12px;color:rgba(170,196,255,.92);cursor:pointer;user-select:none;}
+    .toggleLink:hover{opacity:.9;text-decoration:underline;}
+
+    /* Insights ticker */
+    .insightsWrap{
+      width:min(1040px, 100%);
+      margin:12px auto 0;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .insHead{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .insHead .l{
+      display:flex; align-items:center; gap:10px;
+      font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+      color:rgba(238,243,251,.78);
+    }
+    .insHead .r{
+      font-size:12px; color:rgba(215,224,236,.80);
+    }
+    .ticker{
+      position:relative;
+      overflow:hidden;
+      padding:10px 12px 12px;
+    }
+    .track{
+      display:flex; gap:10px;
+      width:max-content;
+      animation: scroll 56s linear infinite;
+      will-change: transform;
+    }
+    .insightsWrap:hover .track{ animation-play-state: paused; }
+    @keyframes scroll{
+      from{ transform: translateX(0); }
+      to{ transform: translateX(-50%); }
+    }
+    .ipill{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:9px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      font-size:12px;
+      color:rgba(238,243,251,.90);
+      white-space:nowrap;
+      cursor:pointer;
+    }
+    .itag{
+      font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+      color:rgba(238,243,251,.70);
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+    }
+    .itag.good{border-color:rgba(62,224,143,.34); background:rgba(62,224,143,.10)}
+    .itag.warn{border-color:rgba(255,207,90,.34); background:rgba(255,207,90,.10)}
+    .itag.bad{border-color:rgba(255,90,106,.34); background:rgba(255,90,106,.10)}
+
+    /* Utility */
+    .hidden{display:none !important;}
+
+  
+    .govSummaryLine{margin:10px 0 14px; padding:10px 12px; border:1px solid rgba(255,255,255,.08); border-radius:14px; background:rgba(255,255,255,.03); font-size:12px; color:rgba(255,255,255,.82); display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    .govSummaryLine .left{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+    .govSummaryLine .pill{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.20); font-weight:800;}
+    .govSummaryLine .pill .dot{width:8px; height:8px; border-radius:99px; background:var(--warn);}
+    .govSummaryLine .pill.good .dot{background:var(--good);}
+    .govSummaryLine .pill.bad .dot{background:var(--bad);}
+    .govSummaryLine a{color:rgba(255,255,255,.92); text-decoration:none; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.04); padding:7px 10px; border-radius:12px; font-weight:800;}
+    .govSummaryLine a:hover{background:rgba(255,255,255,.07);}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="inner">
+      <div class="brand">
+        <div class="mark" aria-label="Outcome AI logo placeholder"></div>
+        <div class="name">
+          <strong>Outcome AI</strong>
+          <span>Decision Intelligence for Automotive Capital</span>
+        </div>
+      </div>
+      <div class="topright">
+        <div class="pill"><span class="dot good"></span> Ready</div>
+        <div class="pill clickable" id="grossPill" title="Click to adjust gross goal"><span class="dot warn"></span> Gross Goal: <span id="grossGoalText">$3,000</span></div>
+        <div class="pill clickable hidden" id="govPill" title="Buy Decision — Should We Really Buy This Car? (Store Patterns • Money Turn • Confidence)"><span class="dot warn"></span> Buy Decision</div>
+        <div class="pill"><span class="dot good"></span> Dealer: Rob Sight Ford</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1>Most tools reset every morning. Outcome doesn't.</h1>
+      <p>Immediate clarity first. Details only when you click.</p>
+
+      <div class="vinbox" role="region" aria-label="VIN analysis panel">
+        <div class="vinrow">
+          <div class="vinStatusWrap">
+            <div class="vinlabel">VIN</div>
+            <span id="vinStatusDot" class="dot vinStatusDot neutral" title="" aria-label="VIN status"></span>
+          </div>
+          <input id="vinInput" type="text" placeholder="Type or paste a VIN…" value="" />
+
+          <div class="dialwrap" aria-label="Memory Confidence">
+            <div class="dial" title="Memory Confidence">
+              <svg viewBox="0 0 40 40" aria-hidden="true">
+                <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="3"></circle>
+                <circle id="dialArc" cx="20" cy="20" r="16" fill="none" stroke="rgba(62,224,143,.90)" stroke-width="3"
+                        stroke-linecap="round" stroke-dasharray="100.53" stroke-dashoffset="25.13"
+                        transform="rotate(-90 20 20)"></circle>
+              </svg>
+              <div class="center" id="dialLetter">H</div>
+            </div>
+            <div class="dialmeta">
+              <div class="l">Memory Confidence</div>
+              <div class="v" id="dialText">High</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="btnbar">
+          <div class="btn primary" id="btnAnalyze" role="button" tabindex="0">
+            <span class="ico">A</span> Analyze
+          </div>
+          <div class="btn" id="btnAssist" role="button" tabindex="0">
+            <span class="ico">⎈</span> Acquisition Assist
+          </div>
+        </div>
+      </div>
+
+      <div class="hintline">
+      </div>
+      <div class="help">Tip: press <kbd>?</kbd> to view queued upgrades (internal only).</div>
+    </div>
+
+    <div class="below" aria-label="Secondary actions">
+      <div class="tile" id="tileAcquire">
+        <div class="chip good">Action</div>
+        <div class="t">Acquire Now</div>
+        <div class="v">5</div>
+        <div class="m">Best-fit opportunities — click to drill in.</div>
+      </div>
+
+      <div class="tile" id="tileStop">
+        <div class="chip bad">Risk</div>
+        <div class="t">Stop Buying</div>
+        <div class="v">3</div>
+        <div class="m">Units that require perfect buying discipline.</div>
+      </div>
+
+      <div class="tile" id="tileCOI">
+        <div class="chip warn">Leakage</div>
+        <div class="t">Cost of Inaction</div>
+        <div class="v" id="coiTileValue">$8,420</div>
+        <div class="m">Profit leakage + the next move.</div>
+      </div>
+    </div>
+  </div>
+
+
+    <div class="insightsWrap" aria-label="Top store insights ticker">
+      <div class="insHead">
+        <div class="l">Top Insights</div>
+        <div class="r">Auto-scroll • hover to pause • click any insight to expand</div>
+      </div>
+      <div class="ticker">
+        <div class="track" id="insightTrack"></div>
+      </div>
+    </div>
+
+
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="shd">
+        <div class="hwrap">
+          <button class="back" id="btnBack">← Back</button>
+          <div class="h">
+            <strong id="modalTitle">Outcome</strong>
+            <span id="modalSub">—</span>
+          </div>
+        </div>
+        <button class="close" id="btnClose">Close</button>
+      </div>
+
+      <div class="sbd">
+        <div class="panel">
+          <div class="ph">
+            <div class="t" id="leftTitle">Outcome Memory</div>
+            <div class="badge good" id="leftBadge">Memory Confidence: High</div>
+          </div>
+
+          <div class="chiprow" id="quickChips"></div>
+
+          <div class="muted" id="leftIntro" style="font-size:12px; line-height:1.6; margin-top:10px;"></div>
+
+          <div id="govSummaryLine" class="govSummaryLine"></div>
+
+          <div class="kv" id="leftKv"></div>
+          <div id="leftExtra"></div>
+        </div>
+
+        <div class="panel">
+          <div class="ph">
+            <div class="t" id="rightTitle">Call Intake</div>
+            <div class="badge warn" id="rightBadge">—</div>
+          </div>
+
+          <div id="rightBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="grossModal" aria-hidden="true">
+    <div class="sheet small" role="dialog" aria-modal="true">
+      <div class="shd">
+        <div class="h">
+          <strong>Gross Goal</strong>
+          <span>Global setting (tightens discipline line)</span>
+        </div>
+        <button class="close" id="btnGrossClose">Close</button>
+      </div>
+      <div class="sbd" style="grid-template-columns:1fr;">
+        <div class="panel">
+          <div class="muted" style="font-size:12px; line-height:1.6;">
+            Set the front gross goal you want to hit. If your goal is higher than your history, Outcome tightens the discipline line.
+          </div>
+          <div class="field">
+            <label for="grossInput">Gross Goal (front gross)</label>
+            <input id="grossInput" type="number" min="0" step="50" value="3000" />
+          </div>
+          <div class="row">
+            <button class="close" id="btnGrossSave" style="cursor:pointer;">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="roadmap" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" style="width:min(820px,100%);">
+      <div class="shd">
+        <div class="h">
+          <strong>Queued Upgrades</strong>
+          <span>Internal only</span>
+        </div>
+        <button class="close" id="btnRoadClose">Close</button>
+      </div>
+      <div class="sbd" style="grid-template-columns:1fr;">
+        <div class="panel">
+          <div class="muted" style="font-size:12px; line-height:1.7;">
+            <ul id="roadList" style="margin:0; padding-left:18px;"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="modal" id="govModal" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" style="width:min(980px,100%);">
+      <div class="shd">
+        <div class="hwrap">
+          <div class="h">
+            <strong>Buy Decision — Should We Really Buy This Car?</strong>
+            <span id="govSub">Based on your store’s history + this VIN</span>
+          </div>
+        </div>
+        <button class="close" id="btnGovClose">Close</button>
+      </div>
+
+      <div class="sbd" style="grid-template-columns:1fr;">
+        <!-- BUY DECISION layout (matches vetted HTML v3) -->
+        <div class="bdGrid">
+          <!-- Left column -->
+          <div class="bdPanel">
+            <div class="bdHead">
+              <div class="bdLabel">Overall Outcome Decision (this VIN)</div>
+              <div id="overallPill" class="badge good bdPill">
+                <span class="pctMini" id="overallPct">—%</span>
+                <span id="overallText">—</span>
+              </div>
+            </div>
+
+            <div class="bdHint">This is how strongly Outcome believes this recommendation fits your store’s history + this VIN.</div>
+
+            <div class="bdCards">
+              <div class="bdCard">
+                <div class="bdCardTitle">VIN</div>
+                <div class="bdCardMono" id="vinShort">—</div>
+                <div class="bdCardSub" id="ymmt">—</div>
+              </div>
+              <div class="bdCard">
+                <div class="bdCardTitle">Outcome Says</div>
+                <div class="bdCardSub" id="outcomeSays">—</div>
+                <div class="bdCardSub">Main reason: <b id="reasonText">—</b></div>
+              </div>
+            </div>
+
+            <div class="bdHint"><b>What’s driving THIS VIN decision</b> — these %’s are not odds. They show where the risk is coming from for this VIN.</div>
+            <div class="bdBars" id="bars"></div>
+
+            <div class="bdCallout">
+              <div class="bdCallTitle">What Usually Happens Next</div>
+              <ul class="bdBullets" id="usuallyNext"></ul>
+            </div>
+
+            <div class="bdFooter">Outcome isn’t judging the car — it’s judging how this store usually performs when it buys cars like this.</div>
+          </div>
+
+          <!-- Right column -->
+          <div class="bdPanel">
+            <div class="bdHead">
+              <div class="bdLabel">How This VIN’s Segment Moves at Your Store</div>
+              <div class="badge" id="storeDomBadge">Store Avg DOM: —</div>
+            </div>
+
+            <div class="bdTwo">
+              <div class="bdCard">
+                <div class="bdCardTitle">This VIN’s Segment</div>
+                <div class="bdCardSub" id="segName">—</div>
+                <div class="bdStat">Avg sale: <b id="segDom">—</b> days</div>
+                <div class="bdStat">Money Turn Speed: <b id="segSpeed">—</b></div>
+                <div class="bdTiny">How fast your cash usually comes back</div>
+              </div>
+              <div class="bdCard">
+                <div class="bdCardTitle">Your Store Baseline</div>
+                <div class="bdCardSub">All segments (demo)</div>
+                <div class="bdStat">Avg sale: <b id="storeDom">—</b> days</div>
+                <div class="bdStat" id="weekLine">—</div>
+              </div>
+            </div>
+
+            <div class="bdDivider"></div>
+
+            <div class="bdHead">
+              <div class="bdLabel">Where This Store Usually Gets Hurt (this VIN)</div>
+              <div class="badge warn" id="hurtBadge">Risk: —</div>
+            </div>
+
+            <div class="bdCallout">
+              <div class="bdCallTitle">Why This VIN Is Flagged</div>
+              <ul class="bdBullets" id="flagWhy"></ul>
+            </div>
+
+            <div class="bdTwo">
+              <div class="bdCard">
+                <div class="bdCardTitle">Segment Pattern</div>
+                <div class="bdCardSub" id="segPatternTitle">—</div>
+                <div class="bdStat">Average result: <b id="segAvgGross">—</b></div>
+                <div class="bdStat">Sample size: <b id="segSample">—</b></div>
+                <div class="bdStat" id="segPlain">—</div>
+              </div>
+              <div class="bdCard">
+                <div class="bdCardTitle">Buying Pattern</div>
+                <div class="bdCardSub">What happens when discipline slips</div>
+                <div class="bdStat">Margin pressure: <b id="bpMargin">—</b></div>
+                <div class="bdStat">Price action: <b id="bpTiming">—</b></div>
+                <div class="bdStat" id="bpPlain">—</div>
+              </div>
+            </div>
+
+            <div class="bdHint" style="margin-top:10px">This VIN matches a pattern that has cost this store money before — regardless of who bought it.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    let grossGoal = 3000;
+    const CALL_INTAKE = {};
+    const AUCTION_GUARDRAIL = {
+      "1FTEW1EP5MFA12345": { status:"Within Guardrail", rationale:"Wholesale constraints are aligned with your discipline line." },
+      "1FM5K8D86LGA12345": { status:"Within Guardrail", rationale:"Guardrail is satisfied at the discipline line." },
+      "1FMCU0G63LUA12345": { status:"Outside Guardrail", rationale:"Wholesale constraints are tight. This requires perfect intake and a strict line." }
+    };
+    const PEER_CONTEXT = {
+      "1FTEW1EP5MFA12345": { label:"Top Quartile", note:"Stores like you turn this profile faster when bought clean and inside discipline." },
+      "1FM5K8D86LGA12345": { label:"Middle", note:"Peers succeed when recon is verified and pricing is disciplined." },
+      "1FMCU0G63LUA12345": { label:"Bottom Quartile", note:"Peers struggle unless bought perfectly. Margin buffer is thin." }
+    };
+
+    const VIN_DATA = {
+      "1FTEW1EP5MFA12345": { ymmt:"2021 Ford F-150 XLT 4x4", rec:"Buy", confidence:"High", buyTo:"$28,300", walkAway:"$29,200", owned:"5 units", front:"$1,850", recon:"$1,340", days:"23",
+        loss:"2 of last 5 units required price cuts after Day 20. Avg compression: -$780.", coi:"$3,420", risk:"Low", turn:"Fast", reconVar:"Low" },
+      "1FM5K8D86LGA12345": { ymmt:"2020 Ford Explorer XLT AWD", rec:"Caution", confidence:"Medium", buyTo:"$24,900", walkAway:"$25,600", owned:"3 units", front:"$1,120", recon:"$1,780", days:"29",
+        loss:"Recon variance is high. 2 of 3 units compressed after Day 18. Avg compression: -$1,140.", coi:"$2,910", risk:"Medium", turn:"Medium", reconVar:"High" },
+      "1FMCU0G63LUA12345": { ymmt:"2021 Ford Escape SE", rec:"High Risk Buy", confidence:"Medium", buyTo:"$18,200", walkAway:"$18,900", owned:"6 units", front:"$690", recon:"$1,420", days:"34",
+        loss:"Low margin buffer. 4 of 6 units required price cuts after Day 16. Avg compression: -$620.", coi:"$2,305", risk:"High", turn:"Slow", reconVar:"Medium" }
+
+      /* Demo VINs (real checksum-valid) — used for Governance + Analyze/Assist demos */
+      ,"3GNAXKEV2NL118902": { ymmt:"2022 Chevrolet Equinox LT", rec:"High Risk Buy", confidence:"Medium", buyTo:"$20,200", walkAway:"$20,900", owned:"4 units", front:"-$150", recon:"$1,050", days:"61",
+        loss:"This profile typically needs price action after Day 25. Avg compression: -$900. Common miss: buying above discipline line.", coi:"$3,180", risk:"High", turn:"Slow", reconVar:"Medium" }
+      ,"1FTFW1E58MFA10231": { ymmt:"2021 Ford F-150 Lariat 4x4", rec:"Caution", confidence:"Medium", buyTo:"$39,400", walkAway:"$40,300", owned:"3 units", front:"$1,200", recon:"$1,450", days:"38",
+        loss:"Turns are decent, but gross compresses if recon drifts. Watch pack + trim premiums.", coi:"$2,760", risk:"Medium", turn:"Medium", reconVar:"Medium" }
+      ,"2T3P1RFV3NW224700": { ymmt:"2022 Toyota RAV4 XLE", rec:"Buy", confidence:"High", buyTo:"$26,900", walkAway:"$27,700", owned:"5 units", front:"$1,750", recon:"$650", days:"19",
+        loss:"Repeatable win when bought clean. Minimal recon variance. Moves fast inside discipline.", coi:"$1,420", risk:"Low", turn:"Fast", reconVar:"Low" }
+      ,"19XFL1H83NE019991": { ymmt:"2022 Honda Civic Touring", rec:"Buy", confidence:"High", buyTo:"$21,900", walkAway:"$22,600", owned:"4 units", front:"$980", recon:"$540", days:"21",
+        loss:"Stable performer. Gross holds when pricing is disciplined in the first 10 days.", coi:"$1,180", risk:"Low", turn:"Fast", reconVar:"Low" }
+    };
+
+    const ACQUIRE_NOW = [
+      { ymmt:"2021 Ford F-150 XLT 4x4", vin:"1FTEW1EP5MFA12345", conf:"High", why:"Best turn + margin profile. Low recon variance.", buyTo:"$28,300" },
+      { ymmt:"2020 Ford Explorer XLT AWD", vin:"1FM5K8D86LGA12345", conf:"Medium", why:"Strong demand but recon swings. Stay disciplined.", buyTo:"$24,900" },
+      { ymmt:"2019 Ford Edge SEL AWD", vin:"2FMPK4J96KBB12345", conf:"High", why:"Consistent retail curve. Predictable exit.", buyTo:"$20,700" },
+      { ymmt:"2022 Ford Ranger XLT", vin:"1FTER4FH9NLD12345", conf:"High", why:"Fast movers when clean. Margin holds.", buyTo:"$27,100" },
+      { ymmt:"2021 Ford Escape SE", vin:"1FMCU0G63LUA12345", conf:"Medium", why:"Only works if bought right. Watch recon.", buyTo:"$18,200" }
+    ];
+
+    const STOP_BUYING_UNITS = [
+      {
+        ymmt:"2018 Ford Escape SE",
+        vin:"1FTEW1EP5MFA12345",
+        flag:"High Risk Buy",
+        signal:"Recon variance + thin buffer above the line",
+        impact:"Average front compresses after Day 21; markdowns compound quickly.",
+        guidance:"Only buy under the Exception Line and verify recon scope before committing."
+      },
+      {
+        ymmt:"2020 Ford Explorer XLT",
+        vin:"1FM5K8D86LGA12345",
+        flag:"High Risk Buy",
+        signal:"Aging cliff + repeated price cuts in history",
+        impact:"Profit leakage shows up as days-to-turn climbs past 30.",
+        guidance:"If you buy it, buy tight and retail fast—otherwise walk."
+      },
+      {
+        ymmt:"2021 Ford F-150 XLT",
+        vin:"1FMCU0G63LUA12345",
+        flag:"High Risk Buy",
+        signal:"Discipline required to protect gross goal",
+        impact:"Stretching above the line turns a good truck into a thin-margin deal.",
+        guidance:"Stay inside the discipline line or counter—Outcome will not recommend stretching."
+      }
+    ];
+
+    const COI_BREAKDOWN = [
+      { vin:"1FM5K8D86LGA12345", ymmt:"2020 Ford Explorer XLT AWD", leakage:"$2,910", why:"Recon variance + slow decisions compress gross.", action:"Verify recon before committing. Hold the discipline line." },
+      { vin:"1FMCU0G63LUA12345", ymmt:"2021 Ford Escape SE", leakage:"$2,305", why:"Thin buffer. Price cuts hit fast after Day 16.", action:"Only buy clean and inside line. Avoid stretching." },
+      { vin:"1FTEW1EP5MFA12345", ymmt:"2021 Ford F-150 XLT 4x4", leakage:"$3,420", why:"Waiting loses the deal on hot profiles.", action:"Move same-day and lock the line early." }
+    ];
+
+
+    // Top 10 "store insights" (demo-safe now; in real mode these come from dealer's own deal history + recon + days-to-turn)
+    const TOP_INSIGHTS = [
+      { tag:"Leakage", tone:"warn", text:"Price cuts after Day 18 are compressing gross by ~$1.1k on Explorer profiles.", drill:"COI" },
+      { tag:"Speed", tone:"good", text:"Same-day buying decisions protect margin on hot truck profiles (F-150/compact pickups).", drill:"Acquire" },
+      { tag:"Recon", tone:"bad",  text:"High recon variance is the #1 reason deals miss front gross on SUVs.", drill:"Assist" },
+      { tag:"Discipline", tone:"warn", text:"Stretching above the discipline line turns ‘good cars’ into thin-buffer risk.", drill:"Memory" },
+      { tag:"Turn", tone:"good", text:"Your best performers consistently exit < 28 days when bought clean.", drill:"Acquire" },
+      { tag:"Margin", tone:"warn", text:"Low buffer vehicles require perfect intake — seller ask + condition notes matter.", drill:"Memory" },
+      { tag:"Avoid", tone:"bad",  text:"Stop Buying list is not ‘bad cars’ — it’s where your store leaks profit unless bought perfectly.", drill:"Stop" },
+      { tag:"Goal", tone:"warn", text:"Raising Gross Goal tightens the discipline line automatically (protects the $3k target).", drill:"Gross" },
+      { tag:"Confidence", tone:"good", text:"High Memory Confidence = repeatable outcomes; low confidence = slow down and intake more.", drill:"Memory" },
+      { tag:"Guardrail", tone:"bad",  text:"Outside Guardrail means wholesale constraints are tight — requires strict line + verified recon.", drill:"Memory" }
+    ];
+
+
+    const UPGRADES_BACKLOG = [
+      "Auction Guardrail v1 (status only; never show auction values)",
+      "Peer Context v1 (high-level benchmarking)",
+      "Progressive disclosure to reduce information overload",
+      "Roleplay mode: 15-sec call intake script buttons"
+    ];
+
+    const modal = document.getElementById('modal');
+    const roadmap = document.getElementById('roadmap');
+    const grossModal = document.getElementById('grossModal');
+
+    const vinInput = document.getElementById('vinInput');
+    const vinStatusDot = document.getElementById('vinStatusDot');
+    const btnAnalyze = document.getElementById('btnAnalyze');
+    const btnAssist = document.getElementById('btnAssist');
+
+    const btnClose = document.getElementById('btnClose');
+    const btnBack = document.getElementById('btnBack');
+
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSub = document.getElementById('modalSub');
+
+    const quickChips = document.getElementById('quickChips');
+
+    const leftTitle = document.getElementById('leftTitle');
+    const leftBadge = document.getElementById('leftBadge');
+    const leftIntro = document.getElementById('leftIntro');
+    const leftKv = document.getElementById('leftKv');
+    const leftExtra = document.getElementById('leftExtra');
+
+    const rightTitle = document.getElementById('rightTitle');
+    const rightBadge = document.getElementById('rightBadge');
+    const rightBody = document.getElementById('rightBody');
+
+    const dialArc = document.getElementById('dialArc');
+    const dialLetter = document.getElementById('dialLetter');
+    const dialText = document.getElementById('dialText');
+
+    const govPill = document.getElementById('govPill');
+    const govModal = document.getElementById('govModal');
+    const btnGovClose = document.getElementById('btnGovClose');
+
+    // Show Buy Decision only after a valid VIN is entered (keeps dashboard clean).
+    function isValidVin(v){
+      const s = (v||'').trim().toUpperCase();
+      // Standard VIN length is 17; exclude I/O/Q.
+      return /^[A-HJ-NPR-Z0-9]{17}$/.test(s);
+    }
+
+    function setVinUI(state){
+      // state: 'empty' | 'valid' | 'invalid'
+      if(!vinStatusDot) return;
+      vinStatusDot.classList.remove('good','bad','neutral');
+      vinInput.removeAttribute('title');
+      vinStatusDot.removeAttribute('title');
+
+      if(state === 'empty'){
+        vinStatusDot.classList.add('neutral');
+        return;
+      }
+      if(state === 'invalid'){
+        vinStatusDot.classList.add('bad');
+        // Tooltip text must be exactly: "Invalid VIN"
+        vinInput.setAttribute('title','Invalid VIN');
+        vinStatusDot.setAttribute('title','Invalid VIN');
+        return;
+      }
+      // valid
+      vinStatusDot.classList.add('good');
+    }
+
+    function updateGovPillVisibility(){
+      const vin = (vinInput.value||'').trim().toUpperCase();
+      if(!vin){
+        setVinUI('empty');
+        govPill.classList.add('hidden');
+        closeGov();
+        return;
+      }
+      if(isValidVin(vin)){
+        setVinUI('valid');
+        govPill.classList.remove('hidden');
+      } else {
+        setVinUI('invalid');
+        govPill.classList.add('hidden');
+        // If the user clears/invalidates the VIN, hide details as well.
+        closeGov();
+      }
+    }
+
+    // --- Buy Decision — Should We Really Buy This Car? demo model (kept simple; replaces clutter with one modal) ---
+    // In production, these are derived from DMS history + Outcome Memory.
+    const GOV_HISTORY = [
+      { vin:"1FTEW1EP5MFA12345", ymmt:"2021 Ford F-150 XLT 4x4", segment:"Full-Size Truck", buyer:"Jake (UCM)", acq:28300, dom:23, gross:1850 },
+      { vin:"1FM5K8D86LGA12345", ymmt:"2020 Ford Explorer XLT AWD", segment:"Midsize SUV", buyer:"Tanya (Buyer)", acq:24900, dom:29, gross:1120 },
+      { vin:"1FMCU0G63LUA12345", ymmt:"2021 Ford Escape SE", segment:"Compact SUV", buyer:"Jake (UCM)", acq:18200, dom:34, gross:690 },
+      { vin:"WBA13AW05NFM44018", ymmt:"2022 BMW 330i xDrive", segment:"Entry Luxury", buyer:"Jake (UCM)", acq:31500, dom:58, gross:-600 },
+      { vin:"3GNAXKEV2NL118902", ymmt:"2022 Chevy Equinox LT", segment:"Compact SUV", buyer:"Jake (UCM)", acq:21200, dom:64, gross:-850 },
+      { vin:"5N1AZ2BJ9NC125611", ymmt:"2022 Nissan Murano SL", segment:"Midsize SUV", buyer:"Tanya (Buyer)", acq:24400, dom:72, gross:-1400 },
+      { vin:"2T3P1RFV3NW224700", ymmt:"2022 Toyota RAV4 XLE", segment:"Compact SUV", buyer:"Tanya (Buyer)", acq:27300, dom:19, gross:1750 },
+      { vin:"19XFL1H83NE019991", ymmt:"2022 Honda Civic Touring", segment:"Compact Car", buyer:"Jake (UCM)", acq:22350, dom:21, gross:980 },
+      { vin:"1GKS2GKD3NR137011", ymmt:"2022 GMC Yukon SLT", segment:"Full-Size SUV", buyer:"Tanya (Buyer)", acq:54800, dom:67, gross:-2200 },
+      { vin:"1C4PJXDN9NW194330", ymmt:"2022 Jeep Cherokee Limited", segment:"Midsize SUV", buyer:"Tanya (Buyer)", acq:22900, dom:49, gross:250 },
+      { vin:"2FMPK4J96KBB12345", ymmt:"2019 Ford Edge SEL AWD", segment:"Midsize SUV", buyer:"Jake (UCM)", acq:20700, dom:27, gross:1350 },
+      { vin:"1FTER4FH9NLD12345", ymmt:"2022 Ford Ranger XLT", segment:"Full-Size Truck", buyer:"Tanya (Buyer)", acq:27100, dom:24, gross:1600 }
+    ];
+
+    const GOV_CONF = {
+      "1FTEW1EP5MFA12345": { velocity:36, pricing:22, reconROI:28, bias:14 },
+      "1FM5K8D86LGA12345": { velocity:24, pricing:20, reconROI:30, bias:26 },
+      "1FMCU0G63LUA12345": { velocity:20, pricing:18, reconROI:24, bias:38 }
+    };
+
+    function fmtMoney(n){
+      try { return n.toLocaleString('en-US', {style:'currency', currency:'USD', maximumFractionDigits:0}); }
+      catch(e){ return '$'+String(n); }
+    }
+
+    function govSum(obj){ return Object.values(obj).reduce((a,b)=>a+b,0); }
+    function govAvg(arr){ return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+
+    function computeCvi(rows){
+      const storeAvgDom = govAvg(rows.map(r=>r.dom));
+      const bySeg = {};
+      rows.forEach(r=>{ (bySeg[r.segment] ||= []).push(r.dom); });
+      const segments = Object.entries(bySeg).map(([segment, doms])=>{
+        const segAvgDom = govAvg(doms);
+        return { segment, segAvgDom, cvi: segAvgDom / storeAvgDom };
+      }).sort((a,b)=>a.cvi-b.cvi);
+      return { storeAvgDom, segments };
+    }
+
+    function computeBias(rows){
+      const bySeg = {}, byBuyer = {};
+      rows.forEach(r=>{ (bySeg[r.segment] ||= []).push(r.gross); (byBuyer[r.buyer] ||= []).push(r.gross); });
+      const segScores = Object.entries(bySeg).map(([segment, grosses])=>{
+        const losses = grosses.filter(g=>g<0).length;
+        return { segment, lossRate: losses/grosses.length, avgGross: govAvg(grosses), count: grosses.length };
+      }).sort((a,b)=> (b.lossRate-a.lossRate) || (a.avgGross-b.avgGross));
+      const buyerScores = Object.entries(byBuyer).map(([buyer, grosses])=>{
+        const losses = grosses.filter(g=>g<0).length;
+        return { buyer, lossRate: losses/grosses.length, avgGross: govAvg(grosses), count: grosses.length };
+      }).sort((a,b)=> (b.lossRate-a.lossRate) || (a.avgGross-b.avgGross));
+      return { segScores, buyerScores };
+    }
+
+    // Build a single-line Governance summary for the Analyze (Outcome Memory) view.
+    // Dealer language: no acronyms required, but we keep it punchy.
+    function buildGovSummaryLine(vin){
+      const v=(vin||'').trim().toUpperCase();
+      // Only show when VIN is syntactically valid.
+      if(!isValidVin(v)) return '<div class="left"><span class="pill"><span class="dot"></span>Buy Decision</span> Enter a valid VIN to see store pattern risk.</div><span></span>';
+
+      const row = GOV_HISTORY.find(r=>r.vin===v) || null;
+      if(!row){
+        return '<div class="left"><span class="pill"><span class="dot"></span>Buy Decision</span> No store pattern yet for this VIN profile.</div><a href="#" onclick="openGov();return false;">View</a>';
+      }
+
+      const { storeAvgDom, segments } = computeCvi(GOV_HISTORY);
+      const seg = segments.find(s=>s.segment===row.segment) || {cvi:1, segAvgDom: row.dom};
+
+      const { segScores, buyerScores } = computeBias(GOV_HISTORY);
+      const segRisk = (segScores.find(s=>s.segment===row.segment) || {lossRate:0}).lossRate;
+      const buyerRisk = (buyerScores.find(b=>b.buyer===row.buyer) || {lossRate:0}).lossRate;
+      const combined = (segRisk*0.55 + buyerRisk*0.45);
+
+      // Convert to simple dealer-risk buckets
+      let riskWord='Low'; let cls='good';
+      if(combined>=0.55 || seg.cvi>1.20){ riskWord='High'; cls='bad'; }
+      else if(combined>=0.33 || seg.cvi>1.05){ riskWord='Medium'; cls='warn'; }
+
+      const cashWord = seg.cvi>1.10 ? 'Cash comes back slow' : (seg.cvi<0.95 ? 'Cash comes back fast' : 'Cash comes back normal');
+      const patternWord = combined>=0.33 ? 'This store usually gets hurt here' : 'No big pattern risk';
+
+      // One line + button
+      return `<div class="left"><span class="pill ${cls}"><span class="dot"></span>Buy Decision: ${riskWord}</span> ${patternWord} · ${cashWord}</div>` +
+             `<a href="#" onclick="openGov();return false;">View</a>`;
+    }
+
+
+    function primaryDriver(conf){
+      const labels={velocity:'Market Velocity', pricing:'Pricing Position', reconROI:'Recon ROI', bias:'Bias Risk'};
+      const entries = Object.entries(conf).sort((a,b)=>b[1]-a[1]);
+      const [k,v]=entries[0]||['velocity',0];
+      return { key:k, label: labels[k]||k, value:v };
+    }
+
+    function govBadge(pct){
+      if(pct>=75) return {text:'High Confidence', cls:'good'};
+      if(pct>=55) return {text:'Medium Confidence', cls:'warn'};
+      return {text:'Low Confidence', cls:'bad'};
+    }
+
+    // Dealer-language bullets for "What Usually Happens Next".
+    // In production this should be derived from the dealer's actual deal history
+    // for this VIN profile (segment + acquisition behavior + pricing behavior).
+    function govNext(meta){
+      const bullets = [];
+      const loss = (meta && meta.loss) ? String(meta.loss) : '';
+
+      // Try to extract the most meaningful parts from the demo narrative text.
+      // Example: "... after Day 25. Avg compression: -$900. Common miss: buying above discipline line."
+      const dayMatch = loss.match(/after\s+Day\s+(\d+)/i);
+      const compMatch = loss.match(/Avg\s+compression:\s*([-+]?\$?\d[\d,]*)/i);
+
+      if(dayMatch){
+        bullets.push(`Price action usually needed after ~${dayMatch[1]} days`);
+      }
+      if(compMatch){
+        // Normalize "$" prefix
+        const c = compMatch[1].includes('$') ? compMatch[1] : ('$' + compMatch[1]);
+        bullets.push(`Typical margin pressure around ${c}`);
+      }
+      if(/discipline\s+line/i.test(loss)){
+        bullets.push('Common miss: buying above discipline line');
+      }
+
+      // Fallbacks if the narrative string isn't present.
+      if(bullets.length === 0){
+        const risk = (meta && meta.risk) ? String(meta.risk) : '';
+        const turn = (meta && meta.turn) ? String(meta.turn) : '';
+        const reconVar = (meta && meta.reconVar) ? String(meta.reconVar) : '';
+
+        if(turn.toLowerCase() === 'slow') bullets.push('Expect earlier price action if it does not move quickly.');
+        else bullets.push('If it does not move quickly, price action shows up early.');
+
+        if(reconVar.toLowerCase() === 'high') bullets.push('Recon variance can erase margin — verify recon before committing.');
+        else bullets.push('Recon stays predictable when intake is clean.');
+
+        if(risk.toLowerCase() === 'high') bullets.push('This is a discipline buy — don’t stretch above your line.');
+        else bullets.push('Stay inside your discipline line to protect gross.');
+      }
+
+      // Keep it tight.
+      return bullets.slice(0,3);
+    }
+
+    // Overall confidence is NOT the sum of the driver % bars.
+    // It represents how strongly Outcome believes the recommendation fits this store + this VIN (demo logic).
+    function overallConfidencePct(meta){
+      if(!meta) return 60;
+      if(meta.confidencePct!=null) return meta.confidencePct;
+      if(meta.risk==='High') return 82;
+      if(meta.risk==='Medium') return 68;
+      return 60;
+    }
+
+    function openGov(){
+      const vin = (vinInput.value||'').trim().toUpperCase();
+      if(!isValidVin(vin)) return;
+      govModal.classList.add('open');
+      govModal.setAttribute('aria-hidden','false');
+      renderGov();
+    }
+    function closeGov(){
+      govModal.classList.remove('open');
+      govModal.setAttribute('aria-hidden','true');
+    }
+
+    function renderGov(){
+      const setText = (id, val)=>{ const el=document.getElementById(id); if(el) el.textContent = (val==null||val==='') ? '—' : String(val); };
+      const setHTML = (id, html)=>{ const el=document.getElementById(id); if(el) el.innerHTML = html||''; };
+      const shortVin = (v)=> v ? (v.slice(0,8)+'…'+v.slice(-4)) : '—';
+
+      const vin = (vinInput.value||'').trim().toUpperCase();
+      const row = GOV_HISTORY.find(r=>r.vin===vin);
+      const meta = VIN_DATA[vin] || {};
+
+      // Basic VIN/vehicle
+      setText('vinShort', shortVin(vin));
+      setText('ymmt', meta.ymmt || (row && row.ymmt) || 'Vehicle Unknown');
+      const rec = meta.rec || '—';
+      setText('outcomeSays', rec);
+
+      // Driver contributions (NOT odds)
+      const conf = GOV_CONF[vin] || (meta.risk ? (
+        meta.risk==='High' ? {velocity:22, pricing:16, reconROI:22, bias:40} :
+        meta.risk==='Medium' ? {velocity:26, pricing:20, reconROI:26, bias:28} :
+        {velocity:34, pricing:24, reconROI:28, bias:14}
+      ) : {velocity:25, pricing:20, reconROI:25, bias:20});
+
+      const driver = primaryDriver(conf);
+      setText('reasonText', driver.label);
+
+      // Overall confidence pill (big number inside pill)
+      const pct = Math.min(100, Math.max(0, overallConfidencePct(meta)));
+      const b = govBadge(pct);
+      const pill = document.getElementById('overallPill');
+      if(pill) pill.className = `badge ${b.cls} bdPill`;
+      setText('overallPct', `${Math.round(pct)}%`);
+      setText('overallText', `CONFIDENT — ${String(rec||'—').toUpperCase()}`);
+
+      // Bars
+      const barsEl = document.getElementById('bars');
+      if(barsEl){
+        barsEl.innerHTML='';
+        const rows = [
+          ['How fast cars like this sell','velocity'],
+          ['How tight the margin gets','pricing'],
+          ['Whether recon comes back','reconROI'],
+          ['How often this store gets hurt here','bias']
+        ];
+        rows.forEach(([label,key])=>{
+          const pctv = conf[key] || 0;
+          const rowEl = document.createElement('div');
+          rowEl.className = 'bdBarRow';
+          rowEl.innerHTML = `
+            <div class="bdBarName">${label}</div>
+            <div class="bdTrack"><div class="bdFill" style="width:${pctv}%"></div></div>
+            <div class="bdPct">${pctv}%</div>
+          `;
+          barsEl.appendChild(rowEl);
+        });
+      }
+
+      // What Usually Happens Next
+      const next = govNext(meta);
+      const ul = document.getElementById('usuallyNext');
+      if(ul){
+        ul.innerHTML = '';
+        next.forEach(t=>{
+          const li = document.createElement('li');
+          li.textContent = t;
+          ul.appendChild(li);
+        });
+      }
+
+      // Segment movement / money turn (VIN segment vs store baseline)
+      const vinRows = GOV_HISTORY;
+      const cviAll = computeCvi(vinRows);
+      const storeDom = Math.round(cviAll.storeAvgDom || 0);
+      const segRec = (row && cviAll.segments) ? cviAll.segments.find(s=>s.segment===row.segment) : null;
+      const segName = (row && row.segment) ? row.segment : (meta.segment || '—');
+      const segDom = Math.round((segRec && segRec.segAvgDom) ? segRec.segAvgDom : (row ? row.dom : 0));
+      const cviVal = (segRec && segRec.cvi) ? segRec.cvi : (storeDom ? (segDom / storeDom) : 1);
+
+      setText('storeDomBadge', `Store Avg DOM: ${storeDom || '—'} days`);
+      setText('segName', segName);
+      setText('segDom', segDom ? `${segDom}` : '—');
+      setText('segSpeed', `${(Math.round(cviVal*100)/100).toFixed(2)}×`);
+      setText('storeDom', storeDom ? `${storeDom}` : '—');
+
+      // Explain in plain English (weeks faster/slower)
+      let explain = '—';
+      if(storeDom && segDom){
+        const delta = segDom - storeDom;
+        const abs = Math.abs(delta);
+        if(delta === 0) explain = 'About average for this store.';
+        else if(delta > 0) explain = `About ${Math.max(1, Math.round(abs/7))} week(s) slower than normal.`;
+        else explain = `About ${Math.max(1, Math.round(abs/7))} week(s) faster than normal.`;
+      }
+      setText('weekLine', explain);
+      // Hurt / patterns (VIN-specific summary, no people)
+      const biasAll = computeBias(GOV_HISTORY);
+      let riskWord = 'Low', badgeCls = 'good';
+      let segObj = null;
+      if(row){
+        segObj = (biasAll.segScores||[]).find(s=>s.segment===row.segment) || null;
+        const buyerObj = (biasAll.buyerScores||[]).find(b=>b.buyer===row.buyer) || null;
+        const segRisk = segObj ? segObj.lossRate : 0;
+        const buyerRisk = buyerObj ? buyerObj.lossRate : 0;
+        const combined = (segRisk*0.55 + buyerRisk*0.45);
+        if(combined>=0.55 || cviVal>1.20){ riskWord='Medium'; badgeCls='warn'; }
+        if(combined>=0.65 || cviVal>1.30){ riskWord='High'; badgeCls='bad'; }
+      }
+      const hurt = document.getElementById('hurtBadge');
+      if(hurt){
+        hurt.className = `badge ${badgeCls}`;
+        hurt.textContent = `RISK: ${riskWord.toUpperCase()}`;
+      }
+
+      const flagWhy = document.getElementById('flagWhy');
+      if(flagWhy){
+        flagWhy.innerHTML = '';
+        const bullets = [
+          'This VIN sits in a segment where discipline matters most.',
+          'When this store misses on price discipline, margin usually compresses.'
+        ];
+        bullets.forEach(t=>{ const li=document.createElement('li'); li.textContent=t; flagWhy.appendChild(li); });
+      }
+
+      // Segment Pattern (this VIN’s segment)
+      if(row && segObj){
+        const avg = segObj.avgGross;
+        const avgTxt = (avg>=0?'+':'-') + '$' + Math.abs(Math.round(avg)).toLocaleString();
+        setText('segPatternTitle', `${row.segment} at this store`);
+        setText('segAvgGross', avgTxt);
+        setText('segSample', `${segObj.count} units`);
+        setText('segPlain', segObj.lossRate>=0.33 ? 'This segment is a known pain point if bought wrong.' : 'Generally safe — but sensitive to buying above discipline line.');
+      }
+
+      // Buying Pattern summary
+      if(row){
+        const days = row.avgCompressDay || 25;
+        const comp = row.avgCompression || -900;
+        setText('bpMargin', `~$${Math.abs(comp).toLocaleString()} compression`);
+        setText('bpTiming', `after ~${days} days`);
+        setText('bpPlain', 'When discipline slips, the store usually has to cut price to move it.');
+      }
+    }
+
+
+    govPill.addEventListener('click', openGov);
+    btnGovClose.addEventListener('click', closeGov);
+    govModal.addEventListener('click', (e)=>{ if(e.target===govModal) closeGov(); });
+
+    const grossPill = document.getElementById('grossPill');
+    const grossGoalText = document.getElementById('grossGoalText');
+    const grossInput = document.getElementById('grossInput');
+    const btnGrossClose = document.getElementById('btnGrossClose');
+    const btnGrossSave = document.getElementById('btnGrossSave');
+
+    const btnRoadClose = document.getElementById('btnRoadClose');
+    const coiTileValue = document.getElementById('coiTileValue');
+
+    let viewStack = [];
+    let currentView = null;
+
+    let __dialSnapshot = null;
+    let __restoreDialOnClose = false;
+    let __currentDial = null;
+
+
+    function showBack(show){ show ? btnBack.classList.add('show') : btnBack.classList.remove('show'); }
+    function openModal(){ modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); }
+    function closeModal(){
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+      viewStack=[]; currentView=null; showBack(false);
+      // Restore dial state if COI temporarily set it
+      if(__restoreDialOnClose && __dialSnapshot!==null){
+        setDial(__dialSnapshot);
+      }
+      __restoreDialOnClose = false;
+    }
+    function navigate(renderFn, args){
+      
+      // Snapshot dial before opening COI so closing COI doesn't mutate the global gauge
+      if(renderFn === renderCOI){
+        __dialSnapshot = (dialText && dialText.textContent) ? dialText.textContent : null;
+        __restoreDialOnClose = true;
+      } else {
+        __restoreDialOnClose = false;
+      }
+if(currentView) viewStack.push(currentView);
+      currentView = { renderFn, args };
+      showBack(viewStack.length>0);
+      renderFn.apply(null, args || []);
+      openModal();
+    }
+    function goBack(){
+      const prev = viewStack.pop();
+      currentView = prev || null;
+      showBack(viewStack.length>0);
+      if(prev) prev.renderFn.apply(null, prev.args || []);
+    }
+
+    function setBadge(el, level){
+      el.classList.remove('good','warn','bad');
+      const l = (level||'').toLowerCase();
+      if(l.includes('high') || l.includes('within')) el.classList.add('good');
+      else if(l.includes('medium')) el.classList.add('warn');
+      else el.classList.add('bad');
+    }
+    function setDial(conf){
+      const c=(conf||"Low").toLowerCase(); const CIRC=100.53;
+      let pct=.25, stroke="rgba(255,90,106,.90)", letter="L", text="Low";
+      if(c.includes("high")){pct=.78; stroke="rgba(62,224,143,.92)"; letter="H"; text="High";}
+      else if(c.includes("medium")){pct=.52; stroke="rgba(255,207,90,.92)"; letter="M"; text="Medium";}
+      dialArc.style.stroke=stroke; dialArc.style.strokeDasharray=CIRC; dialArc.style.strokeDashoffset=CIRC*(1-pct);
+      dialLetter.textContent=letter; dialText.textContent=text;
+      __currentDial = text;
+    }
+    function kvCard(label,value,sub){return `<div class="k"><div class="l">${label}</div><div class="v">${value}</div><div class="s">${sub||""}</div></div>`;}
+    function fmtMoney(n){const v=Math.round(Number(n)||0); return v.toLocaleString(undefined,{style:"currency",currency:"USD",maximumFractionDigits:0});}
+    function parseMoney(s){if(!s) return NaN; return Number(String(s).replace(/[^0-9.-]/g,''));}
+
+    function getVehicle(vin){
+      const v=(vin||"").trim().toUpperCase();
+      const d=VIN_DATA[v]; if(d && d.ymmt) return d.ymmt;
+      const a=ACQUIRE_NOW.find(x=>x.vin===v); if(a) return a.ymmt;
+      const s=STOP_BUYING_UNITS.find(x=>x.vin===v); return s? s.ymmt : "Unknown Vehicle";
+    }
+    function setModalHeader(title, vin){
+      const v=(vin||"").trim().toUpperCase();
+      modalTitle.textContent=title;
+      modalSub.textContent=vin ? `VIN: ${v} • ${getVehicle(v)}` : "—";
+    }
+    function chip(label,value,tone){
+      return `<div class="qchip ${tone||""}"><span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.74)">${label}</span> ${value}</div>`;
+    }
+    function setQuickChips(html){ quickChips.innerHTML = html || ""; }
+
+    function escapeHtml(s){
+      return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+    }
+    function intakeFor(vin){
+      const v=(vin||"").trim().toUpperCase();
+      if(!CALL_INTAKE[v]) CALL_INTAKE[v]={sellerAsk:"",mileage:"",notes:""};
+      return CALL_INTAKE[v];
+    }
+    function wireIntakeInputs(vin){
+      const v=(vin||"").trim().toUpperCase(); const intake=intakeFor(v);
+      const a=document.getElementById("intakeAsk"), m=document.getElementById("intakeMiles"), n=document.getElementById("intakeNotes");
+      if(a) a.oninput=()=>{intake.sellerAsk=a.value; try{ if(modalTitle && modalTitle.textContent==='Acquisition Assist') updateAssistOutput(v, window.__assistDisciplineLine||''); }catch(e){} };
+      if(m) m.oninput=()=>{intake.mileage=m.value;};
+      if(n) n.oninput=()=>{intake.notes=n.value;};
+    }
+
+    function updateCOITile(){
+      const total = COI_BREAKDOWN.reduce((acc,x)=> acc + (parseMoney(x.leakage)||0), 0);
+      coiTileValue.textContent = fmtMoney(total);
+    }
+
+    
+    function updateAssistOutput(vin, disciplineLineStr){
+      const v=(vin||"").trim().toUpperCase();
+      const intake=intakeFor(v);
+      const ask=parseMoney(intake.sellerAsk);
+      const dl=parseMoney(disciplineLineStr);
+      const decEl=document.getElementById("assistDecision");
+      const ctrEl=document.getElementById("assistCounter");
+      if(!decEl || !ctrEl) return;
+      if(Number.isNaN(ask) || !intake.sellerAsk){
+        decEl.textContent="Enter a seller ask to generate an action.";
+        ctrEl.textContent="";
+        return;
+      }
+      if(Number.isNaN(dl)){
+        decEl.textContent="No discipline line available for this VIN yet.";
+        ctrEl.textContent="Run Analyze first to build memory, then re-open Acquisition Assist.";
+        return;
+      }
+      const gap = ask - dl;
+      if(gap <= 0){
+        decEl.textContent="Proceed — within discipline.";
+        ctrEl.textContent = `Seller ask is ${fmtMoney(Math.abs(gap))} under the discipline line. Confirm recon + condition, then buy tight.`;
+      } else {
+        decEl.textContent="Counter or walk — above discipline.";
+        const counter = dl;
+        ctrEl.textContent = `Seller is ${fmtMoney(gap)} above the discipline line. Recommended counter: ${fmtMoney(counter)}. If they won’t move, walk.`;
+      }
+    }
+
+    function renderMemory(vin){
+      const v=(vin||"").trim().toUpperCase();
+      const d=VIN_DATA[v]||null;
+      const guard=AUCTION_GUARDRAIL[v]||{status:"Within Guardrail",rationale:"Constraints appear aligned."};
+      const peer=PEER_CONTEXT[v]||{label:"—",note:"Peer context becomes available as the dataset expands."};
+
+      setModalHeader("Outcome Memory", v);
+
+      const data=d||{ymmt:getVehicle(v),rec:"No Store History",confidence:"Low",buyTo:"—",walkAway:"—",owned:"0 units",front:"—",recon:"—",days:"—",
+        loss:"No prior ownership in memory. Capture this interaction and Outcome gets smarter over time.",coi:"—",risk:"—",turn:"—",reconVar:"—"};
+
+      let disciplineLine=data.buyTo, disciplineNote="Discipline line based on your store memory.";
+      const baseBuy=parseMoney(data.buyTo), avgFront=parseMoney(data.front);
+      if(!Number.isNaN(baseBuy) && !Number.isNaN(avgFront)){
+        const delta=Math.max(0,grossGoal-avgFront);
+        disciplineLine=fmtMoney(baseBuy-delta);
+        disciplineNote=delta>0?`To target ${fmtMoney(grossGoal)}, tighten by ${fmtMoney(delta)} versus history.`:"Goal aligns with history. No tightening needed.";
+      }
+
+      // Make Acquisition Assist immediately usable after running Analyze.
+      // (Assist reads this value to generate counters vs the discipline line.)
+      window.__assistDisciplineLine = disciplineLine;
+
+      const riskTone=String(data.risk).toLowerCase().includes("high")?"bad":(String(data.risk).toLowerCase().includes("medium")?"warn":"good");
+      const turnTone=String(data.turn).toLowerCase().includes("slow")?"bad":(String(data.turn).toLowerCase().includes("medium")?"warn":"good");
+      const reconTone=String(data.reconVar).toLowerCase().includes("high")?"bad":(String(data.reconVar).toLowerCase().includes("medium")?"warn":"good");
+      const guardTone=String(guard.status).toLowerCase().includes("outside")?"bad":"good";
+
+      setQuickChips(
+        chip("Risk", data.risk || "—", riskTone) +
+        chip("Turn", data.turn || "—", turnTone) +
+        chip("Recon", data.reconVar || "—", reconTone) +
+        chip("Guardrail", guard.status, guardTone) +
+        chip("Peers", peer.label, "warn")
+      );
+
+      leftTitle.textContent="Outcome Memory";
+      leftIntro.textContent = d ? "Store history found. Outcome is summarizing how this profile behaves in your store."
+                               : "No store history found. Outcome will capture this interaction and build memory over time.";
+
+      // Governance one-liner (dealer language): shows a quick verdict + opens Governance modal.
+      const govLine = buildGovSummaryLine(v);
+      // Insert right under the intro text
+      const introEl = document.getElementById('leftIntro');
+      let govEl = document.getElementById('govSummaryLine');
+      if(!govEl){
+        govEl = document.createElement('div');
+        govEl.id = 'govSummaryLine';
+        govEl.className = 'govSummaryLine';
+        introEl.insertAdjacentElement('afterend', govEl);
+      }
+      govEl.innerHTML = govLine;
+
+      leftKv.innerHTML =
+        kvCard("Owned", data.owned || "—", "How many times your store has owned this profile.") +
+        kvCard("Avg Front", data.front || "—", "Your store’s average front gross when you retail it.") +
+        kvCard("Avg Recon", data.recon || "—", "Typical recon spend for this profile.") +
+        kvCard("Avg Days", data.days || "—", "How long it usually takes to sell.");
+      leftExtra.innerHTML =
+        (d ? `<table class="table"><thead><tr><th>Owned</th><th>Avg Front</th><th>Avg Recon</th><th>Avg Days</th></tr></thead>
+              <tbody><tr><td>${data.owned}</td><td>${data.front}</td><td>${data.recon}</td><td>${data.days}</td></tr></tbody></table>` : "") +
+        `<div class="foot"><strong>Loss Insight:</strong> ${data.loss}</div>
+         <div class="foot"><strong>Peer Context:</strong> ${peer.note}</div>
+         <div class="foot"><strong>Auction Guardrail:</strong> ${guard.rationale}</div>`;
+      leftBadge.textContent=`Memory Confidence: ${data.confidence}`; setBadge(leftBadge, data.confidence);
+
+      const intake=intakeFor(v);
+      rightTitle.textContent="Call Intake";
+      rightBadge.textContent=data.coi==="—"?"Cost of Inaction: —":`Cost of Inaction: ${data.coi}`;
+      setBadge(rightBadge,"Medium");
+      rightBody.innerHTML = `
+        <div class="field"><label>Seller Ask</label><input id="intakeAsk" placeholder="Enter seller ask…" value="${escapeHtml(intake.sellerAsk)}" /></div>
+        <div class="field"><label>Mileage</label><input id="intakeMiles" placeholder="Enter mileage…" value="${escapeHtml(intake.mileage)}" /></div>
+        <div class="field"><label>Condition Notes</label><textarea id="intakeNotes" placeholder="Short bullets only…">${escapeHtml(intake.notes)}</textarea></div>
+        <div class="minihelp">Outcome saves this intake to memory. Next time this profile shows up, you move faster and stay disciplined.</div>
+      `;
+      setTimeout(()=>wireIntakeInputs(v),0);
+      setDial(data.confidence);
+    }
+
+    function renderAssist(vin){
+      const v=(vin||"").trim().toUpperCase();
+      const d=VIN_DATA[v]||null;
+      const guard=AUCTION_GUARDRAIL[v]||{status:"Within Guardrail",rationale:"Constraints appear aligned."};
+      const peer=PEER_CONTEXT[v]||{label:"—",note:"Peer context becomes available as the dataset expands."};
+
+      setModalHeader("Acquisition Assist", v);
+
+      const data=d||{confidence:"Low",buyTo:"—",walkAway:"—",rec:"—",front:"—",recon:"—",days:"—",risk:"—",turn:"—",reconVar:"—"};
+
+      let disciplineLine=data.buyTo, delta=0;
+      const baseBuy=parseMoney(data.buyTo), avgFront=parseMoney(data.front);
+      if(!Number.isNaN(baseBuy) && !Number.isNaN(avgFront)){
+        delta=Math.max(0,grossGoal-avgFront);
+        disciplineLine=fmtMoney(baseBuy-delta);
+      }
+
+      const riskTone=String(data.risk).toLowerCase().includes("high")?"bad":(String(data.risk).toLowerCase().includes("medium")?"warn":"good");
+      const turnTone=String(data.turn).toLowerCase().includes("slow")?"bad":(String(data.turn).toLowerCase().includes("medium")?"warn":"good");
+      const reconTone=String(data.reconVar).toLowerCase().includes("high")?"bad":(String(data.reconVar).toLowerCase().includes("medium")?"warn":"good");
+      const guardTone=String(guard.status).toLowerCase().includes("outside")?"bad":"good";
+
+      setQuickChips(
+        chip("Risk", data.risk || "—", riskTone) +
+        chip("Turn", data.turn || "—", turnTone) +
+        chip("Recon", data.reconVar || "—", reconTone) +
+        chip("Guardrail", guard.status, guardTone) +
+        chip("Peers", peer.label, "warn")
+      );
+
+      leftTitle.textContent="Acquisition Assist";
+      leftIntro.textContent="Run a tight, controlled call. Outcome gives you the discipline line and the questions that protect your margin.";
+      leftBadge.textContent=`Confidence: ${data.confidence}`; setBadge(leftBadge, data.confidence);
+
+      leftKv.innerHTML =
+        kvCard("Discipline Line (Buy-To)", disciplineLine, delta>0 ? `Goal gap tightening applied: ${fmtMoney(delta)}.` : "Based on your store memory.") +
+        kvCard("Walk-Away", data.walkAway || "—", "If the seller is above this, you don’t chase.");
+      leftExtra.innerHTML = `
+        <div class="foot"><strong>What Outcome knows about this unit:</strong></div>
+        ${data.front !== "—" ? `<table class="table"><thead><tr><th>Owned</th><th>Avg Front</th><th>Avg Recon</th><th>Avg Days</th></tr></thead>
+          <tbody><tr><td>${data.owned || "—"}</td><td>${data.front}</td><td>${data.recon}</td><td>${data.days}</td></tr></tbody></table>` : ""}
+        <div class="foot"><strong>Guardrail:</strong> ${guard.rationale}</div>
+        <div class="foot"><strong>Peer Context:</strong> ${peer.note}</div>
+      `;
+
+      const intake=intakeFor(v);
+      rightTitle.textContent="Call Intake";
+      rightBadge.textContent="Capture it";
+      setBadge(rightBadge,"High");
+      rightBody.innerHTML = `
+        <div class="field"><label>Seller Ask</label><input id="intakeAsk" placeholder="Enter seller ask…" value="${escapeHtml(intake.sellerAsk)}" /></div>
+        <div class="field"><label>Mileage</label><input id="intakeMiles" placeholder="Enter mileage…" value="${escapeHtml(intake.mileage)}" /></div>
+        <div class="field"><label>Condition Notes</label><textarea id="intakeNotes" placeholder="Short bullets only…">${escapeHtml(intake.notes)}</textarea></div>
+        <div class="minihelp"><strong>15-second script:</strong><br/>“I buy these based on what they do for me. I’m going to run it through Outcome and I’ll give you my best number.”</div>
+      `;
+      setTimeout(()=>wireIntakeInputs(v),0);
+      setDial(data.confidence);
+    }
+
+    function renderAcquireNow(){
+      setQuickChips("");
+      modalTitle.textContent="Acquire Now"; modalSub.textContent="Best-fit opportunities";
+      leftTitle.textContent="Opportunity List"; leftBadge.textContent="Focus: Profit"; setBadge(leftBadge,"High");
+      leftIntro.textContent="Click a row to open Outcome Memory instantly.";
+      const rows = ACQUIRE_NOW.map(x=>`
+        <div style="display:flex; justify-content:space-between; gap:10px; padding:10px; border:1px solid rgba(255,255,255,.10); border-radius:14px; background: rgba(255,255,255,.03); cursor:pointer;"
+             onclick="window.__drillMemory('${x.vin}')">
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <div style="font-size:13px; color:rgba(238,243,251,.92)">${x.ymmt}</div>
+            <div style="font-size:12px; color:rgba(215,224,236,.82); font-family: var(--mono)">${x.vin}</div>
+            <div style="font-size:12px; color:rgba(215,224,236,.78); margin-top:4px;">${x.why}</div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; min-width:120px;">
+            <div class="badge ${x.conf==='High'?'good':'warn'}">Confidence: ${x.conf}</div>
+            <div style="font-size:12px; color:rgba(215,224,236,.74); letter-spacing:.12em; text-transform:uppercase;">Buy-To</div>
+            <div style="font-size:16px; font-weight:760; color:rgba(238,243,251,.95)">${x.buyTo}</div>
+          </div>
+        </div>`).join("");
+      leftKv.innerHTML=""; leftExtra.innerHTML=`<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">${rows}</div>`;
+      rightTitle.textContent="How to use"; rightBadge.textContent="Fast drill-down"; setBadge(rightBadge,"Medium");
+      rightBody.innerHTML=`<div class="foot">Click a unit → Outcome Memory opens → discipline line + risk + guardrail in one screen.</div>`;
+    }
+
+    function renderStopBuying(){
+      setQuickChips("");
+      modalTitle.textContent="Stop Buying"; modalSub.textContent="Units that require perfect discipline";
+      leftTitle.textContent="High Risk Units"; leftBadge.textContent="Discipline Required"; setBadge(leftBadge,"Low");
+      leftIntro.textContent="Not ‘bad cars’ — units your store history says leak profit unless bought perfectly.";
+      const rows = STOP_BUYING_UNITS.map(x=>`
+        <div style="padding:10px; border:1px solid rgba(255,255,255,.10); border-radius:14px; background: rgba(255,255,255,.03); cursor:pointer;"
+             onclick="window.__drillMemory('${x.vin}')">
+          <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <div style="font-size:13px; color:rgba(238,243,251,.92)">${x.ymmt}</div>
+              <div style="font-size:12px; color:rgba(215,224,236,.82); font-family: var(--mono)">${x.vin}</div>
+            </div>
+            <div class="badge bad">${x.flag}</div>
+          </div>
+          <div style="margin-top:8px; font-size:12px; color:rgba(215,224,236,.82)"><strong>Signal:</strong> ${x.signal}</div>
+          <div style="margin-top:4px; font-size:12px; color:rgba(215,224,236,.82)"><strong>Impact:</strong> ${x.impact}</div>
+          <div style="margin-top:6px; font-size:12px; color:rgba(215,224,236,.78)"><strong>Guidance:</strong> ${x.guidance}</div>
+        </div>`).join("");
+      leftKv.innerHTML=""; leftExtra.innerHTML=`<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">${rows}</div>`;
+      rightTitle.textContent="What this means"; rightBadge.textContent="Protect margin"; setBadge(rightBadge,"Low");
+      rightBody.innerHTML=`<div class="foot">Outcome protects your discipline. If you buy these, do it clean and inside the line — or don’t buy them at all.</div>
+                           <div class="foot" style="margin-top:10px;">Click a unit to open Outcome Memory and see the exact leakage pattern.</div>`;
+    }
+
+    function renderCOI(){
+      setQuickChips("");
+      modalTitle.textContent="Cost of Inaction"; modalSub.textContent="Specific leakage tied to vehicles";
+      leftTitle.textContent="Leakage Breakdown"; leftBadge.textContent="What is leaking now"; setBadge(leftBadge,"Medium");
+      leftIntro.textContent="These are the specific vehicles/profiles causing the biggest leakage right now. Click any row to open Outcome Memory.";
+      const rows = COI_BREAKDOWN.map(x=>`
+        <div style="display:flex; flex-direction:column; gap:6px; padding:10px; border:1px solid rgba(255,255,255,.10); border-radius:14px; background: rgba(255,255,255,.03); cursor:pointer;"
+             onclick="window.__drillMemory('${x.vin}')">
+          <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <div style="font-size:13px; color:rgba(238,243,251,.92)">${x.ymmt}</div>
+              <div style="font-size:12px; color:rgba(215,224,236,.82); font-family: var(--mono)">${x.vin}</div>
+            </div>
+            <div style="font-size:16px; font-weight:760; color:rgba(238,243,251,.95)">${x.leakage}</div>
+          </div>
+          <div style="font-size:12px; color:rgba(215,224,236,.78)">${x.why}</div>
+          <div style="font-size:12px; color:rgba(215,224,236,.86)"><strong>Do this:</strong> ${x.action}</div>
+        </div>`).join("");
+      const total = COI_BREAKDOWN.reduce((acc,x)=> acc + (parseMoney(x.leakage)||0), 0);
+      leftKv.innerHTML = kvCard("Total Leakage", fmtMoney(total), "If you don’t change behavior on these vehicles.") +
+                         kvCard("Immediate Fix", "Speed + discipline", "Move same-day and stop stretching above the line.");
+      leftExtra.innerHTML=`<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">${rows}</div>`;
+      rightTitle.textContent="Next actions"; rightBadge.textContent="Do this now"; setBadge(rightBadge,"High");
+      rightBody.innerHTML=`<div class="foot"><strong>1) Click any vehicle</strong><br/>Outcome Memory opens with the discipline line + guardrail in one screen.</div>
+                           <div class="foot" style="margin-top:10px;"><strong>2) Use Gross Goal</strong><br/>If you want $3,000, Outcome tightens discipline accordingly.</div>
+                           <div class="foot" style="margin-top:10px;"><strong>3) Capture intake every time</strong><br/>Seller ask + mileage + condition notes — so memory grows and decisions get faster.</div>`;
+    }
+
+    function openRoadmap(){
+      document.getElementById('roadList').innerHTML = UPGRADES_BACKLOG.map(x=>`<li style="margin:6px 0;">${x}</li>`).join("");
+      roadmap.classList.add('open'); roadmap.setAttribute('aria-hidden','false');
+    }
+    function closeRoadmap(){ roadmap.classList.remove('open'); roadmap.setAttribute('aria-hidden','true'); }
+
+    function openGross(){ grossInput.value=String(grossGoal); grossModal.classList.add('open'); grossModal.setAttribute('aria-hidden','false'); }
+    function closeGross(){ grossModal.classList.remove('open'); grossModal.setAttribute('aria-hidden','true'); }
+    function saveGross(){ grossGoal=Math.max(0, Number(grossInput.value||0)); grossGoalText.textContent=fmtMoney(grossGoal); closeGross(); }
+    grossGoalText.textContent = fmtMoney(grossGoal);
+
+    window.__drillMemory = (vin)=>{ vinInput.value=vin; navigate(renderMemory,[vin]); };
+
+    btnAnalyze.addEventListener('click', ()=>navigate(renderMemory,[vinInput.value]));
+    btnAssist.addEventListener('click', ()=>navigate(renderAssist,[vinInput.value]));
+    document.getElementById('tileAcquire').addEventListener('click', ()=>navigate(renderAcquireNow,[]));
+    document.getElementById('tileStop').addEventListener('click', ()=>navigate(renderStopBuying,[]));
+    document.getElementById('tileCOI').addEventListener('click', ()=>navigate(renderCOI,[]));
+
+    btnClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+    btnBack.addEventListener('click', goBack);
+
+    grossPill.addEventListener('click', openGross);
+    btnGrossClose.addEventListener('click', closeGross);
+    btnGrossSave.addEventListener('click', saveGross);
+    grossModal.addEventListener('click', (e)=>{ if(e.target===grossModal) closeGross(); });
+
+    btnRoadClose.addEventListener('click', closeRoadmap);
+    roadmap.addEventListener('click', (e)=>{ if(e.target===roadmap) closeRoadmap(); });
+
+    vinInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') navigate(renderMemory,[vinInput.value]); });
+
+    document.addEventListener('keydown', (e)=>{
+      if(e.key==='Escape'){ closeModal(); closeRoadmap(); closeGross(); }
+      if(e.key==='?'){ openRoadmap(); }
+    });
+
+    
+    function renderTicker(){
+      const track = document.getElementById("insightTrack");
+      if(!track) return;
+
+      const pills = TOP_INSIGHTS.map((x, idx)=>`
+        <div class="ipill" onclick="window.__openInsight(${idx})" title="Click to expand">
+          <span class="itag ${x.tone}">${x.tag}</span>
+          <span>${x.text}</span>
+        </div>
+      `).join("");
+
+      // Duplicate content so the CSS scroll can loop seamlessly.
+      track.innerHTML = pills + pills;
+    }
+
+    window.__openInsight = (idx)=>{
+      const x = TOP_INSIGHTS[idx];
+      if(!x) return;
+      navigate(renderInsightDetail, [x]);
+    };
+
+    function renderInsightDetail(x){
+      modalTitle.textContent = "Insight";
+      modalSub.textContent = x.tag;
+
+      setQuickChips(chip("Type", x.tag, x.tone) + chip("Where to go", x.drill, "warn"));
+
+      leftTitle.textContent = "What Outcome is telling you";
+      leftBadge.textContent = "Store-specific pattern";
+      setBadge(leftBadge, "High");
+      leftIntro.textContent = x.text;
+
+      leftKv.innerHTML =
+        kvCard("Why it matters", "Profit + speed", "These are the behaviors that create margin or leakage.") +
+        kvCard("What to do next", "Click below", "Outcome takes you straight to the module that proves it.");
+
+      const drillMap = {
+        "Acquire": { label:"Open Acquire Now", fn: ()=>navigate(renderAcquireNow, []) },
+        "Stop": { label:"Open Stop Buying", fn: ()=>navigate(renderStopBuying, []) },
+        "COI": { label:"Open Cost of Inaction", fn: ()=>navigate(renderCOI, []) },
+        "Assist": { label:"Open Acquisition Assist", fn: ()=>navigate(renderAssist, [vinInput.value]) },
+        "Memory": { label:"Open Outcome Memory", fn: ()=>navigate(renderMemory, [vinInput.value]) },
+        "Gross": { label:"Adjust Gross Goal", fn: ()=>openGross() }
+      };
+
+      const d = drillMap[x.drill] || drillMap["Memory"];
+
+      leftExtra.innerHTML = `
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <div class="btn primary" role="button" tabindex="0" onclick="window.__insightDrill()">
+            <span class="ico">↳</span> ${d.label}
+          </div>
+        </div>
+        <div class="foot">
+          This is the “pain point as the way in”: Outcome shows you where profit leaks, then gives you the discipline line to stop it.
+        </div>
+      `;
+
+      window.__insightDrill = ()=>{ d.fn(); };
+
+      rightTitle.textContent = "Talk track";
+      rightBadge.textContent = "10 seconds";
+      setBadge(rightBadge, "Medium");
+      rightBody.innerHTML = `
+        <div class="foot">
+          “Outcome isn’t another book value tool — it’s your store’s memory. It tells you where you’ve leaked profit on this profile and what line protects you.”
+        </div>
+        <div class="foot" style="margin-top:10px;">
+          “If you want to hit ${grossGoalText.textContent} front, Outcome tightens the discipline line so you don’t guess.”
+        </div>
+      `;
+
+      setDial("High");
+    }
+
+
+    (function init(){
+      updateCOITile();
+      renderTicker();
+      const d = VIN_DATA[(vinInput.value||"").trim().toUpperCase()];
+      setDial(d ? d.confidence : "Low");
+      updateGovPillVisibility();
+      vinInput.addEventListener('input', ()=>{
+        const vin=(vinInput.value||"").trim().toUpperCase();
+        const dd=VIN_DATA[vin];
+        setDial(dd ? dd.confidence : "Low");
+        updateGovPillVisibility();
+      });
+    })();
+  
+</script>
+</body>
+</html>
