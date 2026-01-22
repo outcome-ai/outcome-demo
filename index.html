@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Outcome AI — VIN-First Dashboard</title>
+  <title>Outcome AI - Decision Intelligence for Automotive Capital</title>
   <style>
     :root{
       --bg:#1a2230; --bg2:#141b27;
@@ -40,6 +40,25 @@
     .topright{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
     .pill{display:inline-flex;align-items:center;gap:8px;padding:9px 10px;border-radius:999px;
       border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);font-size:12px;color:var(--text2);white-space:nowrap;cursor:default;}
+
+    /* Pill tones (more visible, still premium) */
+    .pill--good{border-color:rgba(62,224,143,.38); background:rgba(62,224,143,.10); color:rgba(238,243,251,.96);}
+    .pill--warn{border-color:rgba(255,207,90,.38); background:rgba(255,207,90,.10); color:rgba(238,243,251,.96);}
+    .pill--bad{border-color:rgba(255,90,106,.38); background:rgba(255,90,106,.10); color:rgba(238,243,251,.96);}
+
+    /* VIN Intelligence: make Buy Decision + Buy-To obvious */
+    .bdHero{display:flex; gap:12px; align-items:stretch; margin-top:10px;}
+    .bdScore{min-width:120px; padding:14px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+      display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center}
+    .bdScore.good{border-color:rgba(62,224,143,.34); background:rgba(62,224,143,.10);}
+    .bdScore.warn{border-color:rgba(255,207,90,.34); background:rgba(255,207,90,.10);}
+    .bdScore.bad{border-color:rgba(255,90,106,.34); background:rgba(255,90,106,.10);}
+    .bdPct{font-size:26px; font-weight:700; letter-spacing:.2px; line-height:1; color:rgba(238,243,251,.98);}
+    .bdLbl{font-size:11px; letter-spacing:.16em; text-transform:uppercase; opacity:.80; margin-top:6px}
+    .bdLine{flex:1; padding:12px 12px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04);}
+    .bdLine .k{font-size:11px; letter-spacing:.16em; text-transform:uppercase; opacity:.75;}
+    .bdLine .v{font-size:26px; font-weight:650; line-height:1.05; margin-top:6px}
+    .bdLine .s{font-size:12px; opacity:.72; margin-top:6px}
     .pill.clickable{cursor:pointer}
     .pill.clickable:hover{border-color:rgba(255,255,255,.20); background:rgba(255,255,255,.07)}
     .dot{width:7px;height:7px;border-radius:50%}
@@ -126,7 +145,15 @@
     .close{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background: rgba(255,255,255,.06);color: rgba(238,243,251,.92);cursor:pointer;font-size:13px;}
     .sbd{padding:16px;display:grid;grid-template-columns: 1.15fr .85fr;gap:14px;
       overflow:auto; flex:1; min-height:0;}
-    @media (max-width: 980px){ .sbd{grid-template-columns:1fr} }
+    @media (max-width: 980px){
+      .sbd{grid-template-columns:1fr}
+    }
+
+    /* Single-pane layout for segment-first modals (hide right panel, stretch coverage) */
+    .sheet.singlePane .sbd{ grid-template-columns: 1fr; }
+    .sheet.singlePane .sbd > .panel:nth-child(2){ display:none; }
+    .sheet.singlePane .sbd > .panel:nth-child(2){ display:none; }
+}
     .panel{border:1px solid rgba(255,255,255,.12);border-radius:18px;background: rgba(255,255,255,.04);padding:14px;}
     .ph{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
     .ph .t{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.74);}
@@ -191,14 +218,24 @@
     .table th{text-align:left;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.72);background: rgba(255,255,255,.05);}
     .table tr:last-child td{border-bottom:none}
     .foot{margin-top:10px;font-size:12px;color:rgba(215,224,236,.82);line-height:1.55;}
-    .chiprow{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
-    .qchip{display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.04); font-size:12px; color:rgba(238,243,251,.88); white-space:nowrap;}
+    .chiprow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px;}
+    @media (max-width: 980px){.chiprow{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media (max-width: 520px){.chiprow{grid-template-columns:1fr;}}
+    .qchip{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);min-width:0;}
+    .qchip .qlabel{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.70);} 
+    .qchip .qval{font-weight:900;color:rgba(238,243,251,.92);font-size:13px;line-height:1.15;white-space:normal;overflow-wrap:anywhere;}
     .qchip.good{border-color:rgba(62,224,143,.34); background:rgba(62,224,143,.10)}
     .qchip.warn{border-color:rgba(255,207,90,.34); background:rgba(255,207,90,.10)}
     .qchip.bad{border-color:rgba(255,90,106,.34); background:rgba(255,90,106,.10)}
     .help{display:none;margin-top:0px;text-align:center;font-size:12px;color:rgba(215,224,236,.66);}
     .help kbd{font-family:var(--mono);font-size:11px;padding:3px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background: rgba(255,255,255,.04);color:rgba(238,243,251,.88);}
+
+    .rightCoI{margin-top:2px;}
+    .rightCoI .coiHdr{font-size:12px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.86);} 
+    .rightCoI .coiSub{margin-top:6px;color:rgba(215,224,236,.80);font-size:12px;line-height:1.45;}
+    .rightCoI .coiList{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+    .rightCoI .coiLi{font-size:12px;color:rgba(215,224,236,.82);line-height:1.45;}
     .sheet.small{width:min(520px,100%);}
     .field{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
     .field label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.70)}
@@ -288,7 +325,31 @@
     .itag.warn{border-color:rgba(255,207,90,.34); background:rgba(255,207,90,.10)}
     .itag.bad{border-color:rgba(255,90,106,.34); background:rgba(255,90,106,.10)}
 
-    /* Utility */
+    
+
+    /* Segment cards (Acquire / Stop) */
+    .segCard{
+      padding:12px;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      background: rgba(255,255,255,.03);
+      cursor:pointer;
+    }
+    .segTop{display:flex; justify-content:space-between; gap:12px; align-items:flex-start;}
+    .segTitle{font-size:13px; color:rgba(238,243,251,.92); line-height:1.2;}
+    .segMeta{font-size:12px; color:rgba(215,224,236,.82); font-family: var(--mono); margin-top:3px;}
+    .segWhy{font-size:12px; color:rgba(215,224,236,.78); margin-top:6px;}
+    .proofStrip{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+    .proofStrip .itag{padding:3px 7px;} /* match Top Insights tags */
+    .proofStripHdr{
+      display:flex; flex-wrap:wrap; gap:8px;
+      margin:10px 0 12px;
+      padding:10px 12px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      background: rgba(255,255,255,.025);
+    }
+/* Utility */
     .hidden{display:none !important;}
 
   
@@ -454,10 +515,828 @@
   z-index:4;
   pointer-events:none;
 }
+
+/* Premium COI panel (used inside Outcome Memory right side) */
+.rightCoI .coiHdr{
+  font-weight:950; letter-spacing:.16em; text-transform:uppercase;
+  color: rgba(238,243,251,.78); font-size:12px;
+  margin-bottom:6px;
+}
+.rightCoI .coiSub{ color: rgba(238,243,251,.62); font-size:13px; margin-bottom:12px; }
+.rightCoI .coiBig{
+  border:1px solid rgba(255,207,90,.24);
+  background: rgba(255,207,90,.10);
+  border-radius:16px;
+  padding:12px 12px;
+  display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+  margin-bottom:12px;
+}
+.rightCoI .coiLabel{ font-size:12px; font-weight:900; color: rgba(255,244,210,.92); letter-spacing:.06em; }
+.rightCoI .coiVal{ font-size:18px; font-weight:950; color: rgba(255,244,210,.98); }
+.rightCoI .coiList{ display:flex; flex-direction:column; gap:8px; }
+.rightCoI .coiLi{ color: rgba(238,243,251,.85); font-weight:800; font-size:13px; }
+
+  
+/* --- COI Directional Preview (premium, consistent) --- */
+.coiPanel{display:flex;flex-direction:column;gap:12px;}
+.coiCard{
+  border:1px solid rgba(255,255,255,.10);
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border-radius:18px;
+  padding:14px 14px 12px;
+  box-shadow: 0 14px 50px rgba(0,0,0,.28);
+}
+.coiTopRow{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.coiTopLeft{min-width:0;}
+.coiKicker{font-size:12px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.86);}
+.coiMeta{margin-top:6px;color:rgba(215,224,236,.76);font-size:13px;line-height:1.35;}
+.coiPill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 12px;border-radius:999px;
+  border:1px solid rgba(255,206,120,.45);
+  background:rgba(255,206,120,.10);
+  color:rgba(255,244,210,.95);
+  font-weight:900;font-size:12px;
+  white-space:nowrap;
+}
+.coiMidRow{margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.coiAction{display:flex;align-items:center;gap:10px;min-width:0;}
+.coiDot{width:10px;height:10px;border-radius:999px;flex:0 0 auto;background:rgba(120,255,189,.95);}
+.coiDot.bad{background:rgba(255,102,120,.95);}
+.coiDot.warn{background:rgba(255,210,95,.95);}
+.coiActionText{font-weight:950;font-size:18px;color:rgba(238,243,251,.98);white-space:nowrap;}
+.coiMeaning{color:rgba(215,224,236,.70);font-size:14px;font-weight:800;}
+.coiBody{margin-top:10px;}
+.coiLead{font-size:16px;font-weight:950;color:rgba(238,243,251,.98);line-height:1.25;}
+.coiLead .money{color:rgba(255,244,210,.98);}
+.coiSubline{margin-top:8px;color:rgba(215,224,236,.72);font-size:14px;line-height:1.35;}
+.coiGrid{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;}
+.coiCell .lbl{font-size:12px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;color:rgba(215,224,236,.55);}
+.coiCell .val{margin-top:6px;font-size:16px;font-weight:950;color:rgba(238,243,251,.95);line-height:1.1;}
+.coiRule{
+  margin-top:12px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  border-radius:14px;
+  padding:10px 12px;
+  color:rgba(215,224,236,.76);
+  font-size:13px;
+  line-height:1.35;
+}
+.coiRule strong{color:rgba(238,243,251,.95);}
+.sourcePanel{
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.03);
+  border-radius:18px;
+  padding:12px;
+}
+.sourceHdr{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.sourceTitle{font-size:12px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.86);}
+.sourceGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;}
+.sourceCell{
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  border-radius:14px;
+  padding:10px 12px;
+}
+.sourceCell .k{font-size:12px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;color:rgba(215,224,236,.55);}
+.sourceCell .v{margin-top:6px;font-size:18px;font-weight:950;color:rgba(238,243,251,.95);line-height:1.05;}
+.sourceCell .v.emph{color:rgba(225,255,241,.95);}
+
+
+/* --- COI Store Modal helpers (premium, matches Outcome Memory) --- */
+.pill--coi{border-color:rgba(255,206,92,.42)!important;background:rgba(255,206,92,.14)!important;color:rgba(255,244,215,.95)!important}
+.divider{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
+.coiCard{border-radius:18px;padding:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03)}
+.coiInsight{margin-top:0;color:rgba(238,243,251,.92);font-weight:900;font-size:14px;line-height:1.3}
+.coiMuted{margin-top:6px;color:rgba(215,224,236,.72);font-size:13px;line-height:1.35}
+.coiMetaGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.meta{border-radius:14px;padding:10px 12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03)}
+.metaK{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(238,243,251,.55);font-weight:900}
+.metaV{margin-top:6px;color:rgba(238,243,251,.92);font-weight:900;font-size:14px;line-height:1.15}
+
+
+    /* ===== VIN SUPER MODAL (Premium) ===== */
+    .omodal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.58);z-index:9999}
+    .omodal[aria-hidden="false"]{display:flex}
+    .omodal__sheet{width:min(1200px,94vw);max-height:90vh;overflow:auto;border-radius:22px;
+      background:linear-gradient(180deg, rgba(36,47,65,.96), rgba(24,32,46,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 30px 90px rgba(0,0,0,.55);
+    }
+    .omodal__top{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:inherit;backdrop-filter: blur(10px);z-index:1}
+    .omodal__title{flex:1;min-width:0}
+    .kicker{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:rgba(238,243,251,.65);font-weight:900}
+    .headline{margin-top:4px;font-size:14px;color:rgba(238,243,251,.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .dotSep{opacity:.55;margin:0 8px}
+    .btn--ghost{border-radius:14px;padding:10px 12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:rgba(238,243,251,.92);font-weight:800}
+
+    .superGrid{display:grid;grid-template-columns: 1.15fr 1fr 1fr;gap:14px;padding:14px}
+    @media (max-width: 1050px){ .superGrid{grid-template-columns:1fr; } }
+
+    .pane{border-radius:18px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);padding:14px}
+    .pane__hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .pane__label{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:rgba(238,243,251,.65);font-weight:900}
+
+    .chipGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0 12px}
+    .chip{border-radius:16px;padding:10px 12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);min-height:54px}
+    .chip__k{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(238,243,251,.55);font-weight:900}
+    .chip__v{margin-top:6px;font-size:13px;color:rgba(238,243,251,.92);font-weight:900;line-height:1.15}
+
+    .statGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+    .stat{border-radius:16px;padding:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03)}
+    .stat__k{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(238,243,251,.55);font-weight:900}
+    .stat__v{margin-top:6px;font-size:20px;font-weight:900;color:rgba(238,243,251,.95)}
+    .stat__s{margin-top:6px;color:rgba(215,224,236,.70);font-size:12.5px;line-height:1.35}
+
+    .divider{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
+    .srcGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .srcCard{border-radius:14px;padding:10px 12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03)}
+    .srcK{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(238,243,251,.55);font-weight:900}
+    .srcV{margin-top:6px;color:rgba(238,243,251,.92);font-weight:900;font-size:14px;line-height:1.15}
+
+    .coiCard{border-radius:18px;padding:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03)}
+    .coiInsight{margin-top:10px;color:rgba(238,243,251,.92);font-weight:900;font-size:14px;line-height:1.3}
+    .coiMuted{margin-top:6px;color:rgba(215,224,236,.72);font-size:13px;line-height:1.35}
+    .coiMetaGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+    .meta{border-radius:14px;padding:10px 12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03)}
+    .metaK{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(238,243,251,.55);font-weight:900}
+    .metaV{margin-top:6px;color:rgba(238,243,251,.92);font-weight:900;font-size:14px;line-height:1.15}
+
+
+    .pill--bad{border-color:rgba(255,90,106,.35);background:rgba(255,90,106,.12)}
+
+/* =========================
+   iOS / Premium Polish Layer
+   ========================= */
+:root{
+  --ink: rgba(238,243,251,.92);
+  --ink2: rgba(238,243,251,.72);
+  --ink3: rgba(238,243,251,.56);
+  --glass: rgba(255,255,255,.045);
+  --glass2: rgba(255,255,255,.06);
+  --stroke: rgba(255,255,255,.10);
+  --stroke2: rgba(255,255,255,.13);
+  --shadowA: 0 24px 80px rgba(0,0,0,.55);
+  --shadowB: 0 10px 30px rgba(0,0,0,.28);
+}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",
+    system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* Modal */
+.omodal__sheet{
+  width:min(1320px,96vw)!important;
+  border-radius:26px!important;
+  border:1px solid var(--stroke)!important;
+  box-shadow:var(--shadowA)!important;
+}
+
+/* Headers */
+.kicker,.pane__label,.ph .t{
+  font-size:11px!important;
+  letter-spacing:.22em!important;
+  color:var(--ink3)!important;
+  font-weight:800!important;
+}
+.headline{
+  font-size:14px!important;
+  color:var(--ink)!important;
+  font-weight:650!important;
+}
+
+/* Panels */
+.pane,.panel{
+  border-radius:20px!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  background:linear-gradient(180deg,var(--glass2),rgba(255,255,255,.03))!important;
+  box-shadow:var(--shadowB)!important;
+  padding:16px!important;
+}
+.muted{
+  color:var(--ink2)!important;
+  font-size:13px!important;
+  line-height:1.45!important;
+}
+
+/* Pills */
+.pill,.badge{
+  padding:7px 10px!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.045)!important;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Chips */
+.chip{
+  border-radius:18px!important;
+  padding:10px 12px!important;
+}
+.chip__k{
+  font-size:10.5px!important;
+  color:var(--ink3)!important;
+}
+.chip__v{
+  font-size:13px!important;
+  font-weight:750!important;
+  color:var(--ink)!important;
+}
+
+/* Stats */
+.stat__v{
+  font-size:18px!important;
+  font-weight:800!important;
+}
+.stat__s{
+  font-size:12.5px!important;
+}
+
+/* COI */
+.coiInsight{
+  font-size:13.5px!important;
+  font-weight:750!important;
+}
+.coiMuted{
+  font-size:12.8px!important;
+}
+.metaK{font-size:10.5px!important;}
+.metaV{font-size:13px!important;}
+
+
+/* === COI Store Modal — iOS Premium Override (match Super Modal look) === */
+#coiStoreModal.modal{
+  position:fixed; inset:0;
+  display:none; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.58);
+  z-index:9999;
+}
+#coiStoreModal.modal[aria-hidden="false"]{display:flex}
+#coiStoreModal .sheet{
+  width:min(1200px,94vw);
+  max-height:90vh;
+  overflow:auto;
+  border-radius:22px;
+  background:linear-gradient(180deg, rgba(36,47,65,.96), rgba(24,32,46,.96));
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 30px 90px rgba(0,0,0,.55);
+}
+#coiStoreModal .modalTop{
+  display:flex; align-items:center; gap:12px;
+  padding:14px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  position:sticky; top:0;
+  background:inherit;
+  backdrop-filter: blur(10px);
+  z-index:1;
+}
+#coiStoreModal .modalTitle{flex:1; min-width:0}
+#coiStoreModal .sub{
+  margin-top:4px;
+  color:rgba(215,224,236,.72);
+  font-size:13px;
+  line-height:1.35;
+}
+#coiStoreModal .btnGhost{
+  border-radius:14px;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.03);
+  color:rgba(238,243,251,.92);
+  font-weight:800;
+}
+#coiStoreModal .modalBody.twoCol{
+  display:grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap:14px;
+  padding:14px;
+}
+@media (max-width: 1050px){
+  #coiStoreModal .modalBody.twoCol{grid-template-columns:1fr}
+}
+#coiStoreModal .panel{
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  padding:14px;
+}
+#coiStoreModal .panelHdr{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+#coiStoreModal .panelLabel,
+#coiStoreModal .sectionTitle{
+  font-size:12px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:rgba(238,243,251,.65);
+  font-weight:900;
+}
+#coiStoreModal .panel p,
+#coiStoreModal .panel .muted,
+#coiStoreModal .panel .subtle,
+#coiStoreModal .panel .rowNote{
+  color:rgba(215,224,236,.72);
+  font-size:13px;
+  line-height:1.35;
+}
+#coiStoreModal .bigQuote{
+  color:rgba(238,243,251,.92);
+  font-weight:900;
+  font-size:14px;
+  line-height:1.3;
+}
+#coiStoreModal .divider{
+  height:1px;
+  background:rgba(255,255,255,.10);
+  margin:12px 0;
+}
+#coiStoreModal .card,
+#coiStoreModal .stackCard{
+  border-radius:16px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.03);
+}
+#coiStoreModal .actionSteps{
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.03);
+  padding:12px;
+}
+
+
+/* === iOS Premium micro-pass (spacing + motion) === */
+.omodal__top{padding:12px 14px !important; gap:10px !important;}
+.omodal__sheet{will-change:opacity,transform; transform:translateY(6px); opacity:0;
+  transition:opacity .18s ease, transform .18s ease;
+}
+.omodal[aria-hidden="false"] .omodal__sheet{opacity:1; transform:translateY(0);}
+@media (prefers-reduced-motion: reduce){
+  .omodal__sheet{transition:none !important; transform:none !important; opacity:1 !important;}
+}
+.superGrid{gap:12px !important; padding:12px !important;}
+.pane{padding:12px !important;}
+.pane__hdr{margin-bottom:8px !important;}
+.chipGrid{gap:8px !important; margin:8px 0 10px !important;}
+.statGrid{gap:8px !important; margin-top:8px !important;}
+.divider{margin:10px 0 !important;}
+/* Slightly tighter card paddings inside long right column */
+.coiCard{padding:12px !important;}
+.meta{padding:10px 12px !important;}
+/* Buttons */
+.btn--primary{
+  border-radius:14px; padding:10px 12px;
+  border:1px solid rgba(106,166,255,.40);
+  background:rgba(106,166,255,.14);
+  color:rgba(238,243,251,.95);
+  font-weight:900;
+}
+.btnRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+
+
+/* ===== Micro-pass: tighter vertical rhythm + modal entry animation ===== */
+:root{
+  --pad-1:12px;
+  --pad-2:14px;
+  --gap-1:10px;
+  --gap-2:12px;
+}
+
+/* Global rhythm trims (2–4px) */
+.modal .sheet{ padding: var(--pad-2); }
+.modal .sheet .panel{ padding: var(--pad-2); }
+.modal .sheet .panelHdr{ margin-bottom: 10px; }
+.modal .sheet .divider{ margin: 10px 0; }
+.modal .sheet .coiCard{ padding: 12px; }
+.modal .sheet .statGrid{ margin-top: 8px; gap: 10px; }
+.modal .sheet .chipGrid{ gap: 10px; margin: 10px 0 10px; }
+.modal .sheet .stat{ padding: 12px; }
+.modal .sheet .muted{ line-height: 1.35; }
+
+/* Supermodal rhythm trims */
+.omodal__top{ padding: 12px 14px; }
+.superGrid{ gap: 12px; padding: 12px; }
+.pane{ padding: 12px; }
+.pane__hdr{ margin-bottom: 8px; }
+.divider{ margin: 10px 0; }
+
+/* Action buttons (COI modal) */
+.actionRow{ display:flex; flex-wrap:wrap; gap:10px; margin-top: 10px; }
+.actionBtn{
+  border-radius: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.05);
+  color: rgba(238,243,251,.92);
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+}
+.actionBtn:hover{ background: rgba(255,255,255,.075); }
+.actionBtn--primary{
+  border-color: rgba(106,166,255,.35);
+  background: rgba(106,166,255,.12);
+}
+.actionBtn--warn{
+  border-color: rgba(255,207,90,.35);
+  background: rgba(255,207,90,.12);
+}
+
+/* Subtle modal entry animation (opacity + translateY(6px)) */
+@keyframes modalIn{
+  from{ opacity:0; transform: translateY(6px) scale(.995); }
+  to{ opacity:1; transform: translateY(0) scale(1); }
+}
+.modal.open .sheet{
+  animation: modalIn .16s ease-out both;
+}
+.omodal[aria-hidden="false"] .omodal__sheet{
+  animation: modalIn .16s ease-out both;
+}
+
+
+
+/* ==========================================================
+   Outcome System Layer — iOS Premium Tokens (v19)
+   Goal: global polish without touching modal wiring
+   ========================================================== */
+:root{
+  /* Type */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  --w-regular: 450;
+  --w-medium: 560;
+  --w-semibold: 650;
+  --w-bold: 720;
+
+  /* Radii */
+  --r-10: 10px;
+  --r-14: 14px;
+  --r-18: 18px;
+  --r-22: 22px;
+  --r-26: 26px;
+  --r-pill: 999px;
+
+  /* Strokes (default 1px, upgrade to hairline on retina) */
+  --stroke: rgba(255,255,255,.10);
+  --stroke-2: rgba(255,255,255,.14);
+  --stroke-3: rgba(255,255,255,.18);
+
+  /* Glass */
+  --glass-1: rgba(255,255,255,.045);
+  --glass-2: rgba(255,255,255,.06);
+
+  /* Shadows */
+  --sh-card: 0 10px 34px rgba(0,0,0,.28);
+  --sh-modal: 0 30px 90px rgba(0,0,0,.60);
+
+  /* Motion */
+  --ease-ui: cubic-bezier(.2,.8,.2,1);
+  --ease-modal: cubic-bezier(.2,.9,.2,1);
+  --dur-ui: 180ms;
+  --dur-modal: 300ms;
+
+  /* Touch */
+  --tap-h: 44px;
+}
+
+body{
+  font-family: var(--font-sans) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+}
+
+/* Consistent hierarchy */
+.hero h1{font-weight: var(--w-bold) !important;}
+.brand .name strong{font-weight: var(--w-semibold) !important;}
+.brand .name span{font-weight: var(--w-medium) !important;}
+.tile .t,.drTitle,.vinlabel,.kicker,.pane__label,.ph .t,.table th,.itag,.bdLabel,.bdBarName,.govLabel{
+  font-weight: var(--w-semibold) !important;
+}
+.tile .v,.drPct,.stat__v,.k .v,.coiLead,.coiActionText{
+  font-weight: var(--w-bold) !important;
+}
+
+/* Shared surfaces */
+.vinbox,.tile,.insightsWrap,.sheet,.omodal__sheet,.panel,.pane,.bdPanel,.bdCard,.bdCallout,.sourcePanel,.miniItem,.qchip,.k,.stat,.srcCard,.coiCard,.meta,.sourceCell,.govSummaryLine{
+  border: 1px solid var(--stroke) !important;
+  box-shadow: var(--sh-card) !important;
+}
+
+/* Hairline upgrade on retina */
+@media (min-resolution: 2dppx){
+  .vinbox,.tile,.insightsWrap,.sheet,.omodal__sheet,.panel,.pane,.bdPanel,.bdCard,.bdCallout,.sourcePanel,.miniItem,.qchip,.k,.stat,.srcCard,.coiCard,.meta,.sourceCell,.govSummaryLine,
+  .pill,.badge,.btn,.ipill,.close,.back,.btn--ghost,.btnGhost,.actionBtn{
+    border-width: .5px !important;
+    border-color: var(--stroke-2) !important;
+  }
+}
+
+/* Pills + chips */
+.pill,.badge,.itag,.ipill,.chip{
+  border-radius: var(--r-pill) !important;
+}
+.pill,.badge,.ipill{
+  background: var(--glass-1) !important;
+}
+.pill.clickable,.ipill{
+  transition: background var(--dur-ui) var(--ease-ui), border-color var(--dur-ui) var(--ease-ui), transform 120ms var(--ease-ui);
+}
+.pill.clickable:hover,.ipill:hover{
+  background: var(--glass-2) !important;
+  border-color: var(--stroke-3) !important;
+  transform: translateY(-1px);
+}
+
+/* Buttons — iOS tap targets + motion */
+.btn,.close,.back,.btn--ghost,.btnGhost,.actionBtn{
+  min-height: var(--tap-h) !important;
+  transition: transform 120ms var(--ease-ui), background var(--dur-ui) var(--ease-ui), border-color var(--dur-ui) var(--ease-ui), box-shadow var(--dur-ui) var(--ease-ui);
+}
+.btn:hover,.close:hover,.back:hover,.btn--ghost:hover,.btnGhost:hover,.actionBtn:hover{
+  transform: translateY(-1px);
+  border-color: var(--stroke-3) !important;
+}
+.btn:active,.close:active,.back:active,.btn--ghost:active,.btnGhost:active,.actionBtn:active{
+  transform: translateY(0px) scale(.99);
+}
+
+/* Tiles — smoother premium hover */
+.tile{
+  transition: transform 120ms var(--ease-ui), border-color var(--dur-ui) var(--ease-ui), background var(--dur-ui) var(--ease-ui), box-shadow var(--dur-ui) var(--ease-ui) !important;
+}
+.tile:hover{
+  box-shadow: 0 14px 44px rgba(0,0,0,.34) !important;
+}
+
+/* Modal entry (applies to both classic modal + supermodal) */
+@keyframes outcomeModalIn{
+  from{ opacity:0; transform: translateY(8px) scale(.995); }
+  to{ opacity:1; transform: translateY(0) scale(1); }
+}
+.modal.open .sheet{
+  animation: outcomeModalIn var(--dur-modal) var(--ease-modal) both;
+  box-shadow: var(--sh-modal) !important;
+}
+.omodal[aria-hidden="false"] .omodal__sheet{
+  animation: outcomeModalIn var(--dur-modal) var(--ease-modal) both;
+  box-shadow: var(--sh-modal) !important;
+}
+@media (prefers-reduced-motion: reduce){
+  .modal.open .sheet,
+  .omodal[aria-hidden="false"] .omodal__sheet{ animation:none !important; }
+}
+
+/* Modal headers: crisp + consistent */
+.shd,.omodal__top,#coiStoreModal .modalTop{
+  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+}
+.shd .h strong,.omodal__title .headline,#coiStoreModal .modalTitle .headline{
+  font-weight: var(--w-semibold) !important;
+}
+
+/* Spacing ladder (light touch) */
+.top .inner{padding: 10px 18px !important;}
+.vinrow{padding: 14px !important;}
+.btnbar{padding: 12px !important;}
+.below{gap: 14px !important;}
+.sbd{gap: 14px !important;}
+.superGrid{gap: 14px !important;}
+
+
+
+/* ==========================================================
+   v19.4 — Tile corner chips match Insights pills (smaller + opacity locked)
+   Safe: CSS-only, scoped to tiles so supermodal .chip cards remain unchanged
+   ========================================================== */
+:root{
+  --tile-pill-opacity: .74; /* LOCKED */
+  --tile-pill-h: 22px;
+  --tile-pill-pad-x: 10px;
+  --tile-pill-fs: 10.5px;
+  --tile-pill-minw: 78px; /* symmetry */
+}
+
+/* Scope ONLY to main dashboard tiles */
+.tile > .chip{
+  position:absolute;
+  top:12px; right:12px;
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  height: var(--tile-pill-h);
+  min-width: var(--tile-pill-minw);
+  padding: 0 var(--tile-pill-pad-x);
+
+  border-radius: 999px;
+  font-size: var(--tile-pill-fs);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  font-weight: 800;
+
+  opacity: var(--tile-pill-opacity);
+
+  /* quiet by default */
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03);
+  color: rgba(238,243,251,.74);
+
+  white-space: nowrap;
+}
+
+/* Color language (matches Insights itag.*) */
+.tile > .chip.good{
+  border-color: rgba(62,224,143,.34);
+  background: rgba(62,224,143,.10);
+  color: rgba(225,255,241,.90);
+}
+.tile > .chip.warn{
+  border-color: rgba(255,207,90,.34);
+  background: rgba(255,207,90,.10);
+  color: rgba(255,244,210,.92);
+}
+.tile > .chip.bad{
+  border-color: rgba(255,90,106,.34);
+  background: rgba(255,90,106,.10);
+  color: rgba(255,220,225,.92);
+}
+
+/* Keep hover subtle; no visual dominance */
+.tile:hover > .chip{ opacity: calc(var(--tile-pill-opacity) + .06); }
+
+
+
+/* ==========================================================
+   v19.6 — Tile chips EXACTLY match Top Insights pill sizing
+   Reuse .itag metrics (Recon / Discipline)
+   ========================================================== */
+
+/* Inherit sizing from Insights pills */
+.tile > .chip{
+  height: 20px;
+  padding: 0 8px;
+  min-width: unset;        /* Insights pills auto-size */
+  font-size: 10px;
+  letter-spacing: .12em;
+  font-weight: 700;
+  border-radius: 999px;
+  opacity: .74;            /* locked */
+}
+
+
+
+/* ==========================================================
+   v19.7 — Tile chips EXACTLY mirror Top Insights pills (.itag)
+   Uses same padding model (3px 8px) instead of fixed height.
+   ========================================================== */
+.tile > .chip{
+  /* match .itag metrics */
+  height: auto !important;
+  padding: 3px 8px !important;
+  min-width: unset !important;
+  font-size: 10px !important;
+  letter-spacing: .14em !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+
+  opacity: .74 !important; /* locked */
+}
+
+
+
+/* ==========================================================
+   v19.8 — Tile chips reset to EXACT .itag pill (tight to text)
+   Goal: pill hugs letters (not big capsule / not circle)
+   ========================================================== */
+.tile > .chip{
+  /* keep positioning */
+  position:absolute !important;
+  top:12px !important;
+  right:12px !important;
+
+  /* match .itag exactly */
+  display:inline-block !important;
+  width:max-content !important;
+  height:auto !important;
+  padding:3px 8px !important;
+
+  font-size:10px !important;
+  letter-spacing:.14em !important;
+  text-transform:uppercase !important;
+  font-weight:600 !important;
+  line-height:1 !important;
+
+  border-radius:999px !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  background: rgba(255,255,255,.03) !important;
+  color:rgba(238,243,251,.70) !important;
+
+  opacity:.74 !important; /* locked */
+}
+
+/* Keep color language but DO NOT inflate size */
+.tile > .chip.good{
+  border-color: rgba(62,224,143,.34) !important;
+  background: rgba(62,224,143,.10) !important;
+  color: rgba(225,255,241,.90) !important;
+}
+.tile > .chip.warn{
+  border-color: rgba(255,207,90,.34) !important;
+  background: rgba(255,207,90,.10) !important;
+  color: rgba(255,244,210,.92) !important;
+}
+.tile > .chip.bad{
+  border-color: rgba(255,90,106,.34) !important;
+  background: rgba(255,90,106,.10) !important;
+  color: rgba(255,220,225,.92) !important;
+}
+
+
+
+/* ==========================================================
+   v19.9 — FIX: global .chip min-height was inflating tile chips
+   Force tile chips to be true text-hugging pills (like .itag)
+   ========================================================== */
+.tile > .chip{
+  min-height: unset !important;
+  min-width: unset !important;
+  width: max-content !important;
+
+  height: auto !important;
+  padding: 3px 8px !important;
+
+  display: inline-block !important;
+  line-height: 1 !important;
+}
+
+
+    /* Strong override: make Buy Decision % match Buy-To size */
+    .bdScore .bdPct{font-size:28px !important; font-weight:700 !important;}
+    .bdLine .v{font-size:28px !important; font-weight:650 !important;}
+
+    /* Stronger semantic pill colors (used for VIN Confidence + Segment Signal) */
+    .pill.pill--good{border-color:rgba(62,224,143,.55) !important; background:rgba(62,224,143,.12) !important; color:rgba(238,243,251,.96) !important;}
+    .pill.pill--warn{border-color:rgba(255,207,90,.55) !important; background:rgba(255,207,90,.12) !important; color:rgba(238,243,251,.96) !important;}
+    .pill.pill--bad{border-color:rgba(255,90,106,.55) !important; background:rgba(255,90,106,.12) !important; color:rgba(238,243,251,.96) !important;}
+
+    /* Limited Signal banner — match premium system typography */
+    .limitedBanner{
+      margin: 10px 0 12px;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: .5px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .limitedBanner .itag{align-self:flex-start;}
+    .limitedText{
+      font-size: 13.5px;
+      line-height: 1.35;
+      color: rgba(215,224,236,.85);
+      letter-spacing: .1px;
+    }
+    .limitedText b{
+      font-weight: 650;
+      color: rgba(238,243,251,.96);
+    }
+
+    .input{
+      background: rgba(255,255,255,.04);
+      border: .5px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: rgba(238,243,251,.94);
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .input:focus{
+      border-color: rgba(106,166,255,.55);
+      box-shadow: 0 0 0 3px rgba(106,166,255,.14), inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    
 </style>
 </head>
 <body>
   <script>
+  const __demoVIN = '1FTEW1EP5MFA12345';
+
   // Dealer slug support (for /d/<dealer-slug>/ deployments)
   (function(){
     try{
@@ -508,7 +1387,7 @@
   </div>
 
       <h1>Most tools reset every morning. Outcome doesn't.</h1>
-      <p>Immediate clarity first. Details only when you click.</p>
+      <p> </p>
 
       <div class="vinbox" role="region" aria-label="VIN analysis panel">
         <div class="vinrow">
@@ -784,6 +1663,256 @@
 
     let grossGoal = 3000;
     const CALL_INTAKE = {};
+
+    const SOURCE_DATA = {
+      // type: service | service_upcoming | appraisal | market
+      // Demo-safe placeholders until dealer feeds are wired.
+      "1FTEW1EP5MFA12345": {
+        type: "service",
+        label: "Service Lane",
+        customerLast: "Henderson",
+        lastServiceDaysAgo: 47,
+        roStatus: "Closed RO",
+        roNumber: "RO-184392",
+        roCloseDate: "11/22/25",
+        serviceType: "Maintenance + Brakes"
+      },
+      "1FM5K8D86LGA12345": {
+        type: "service_upcoming",
+        label: "Upcoming Service",
+        customerLast: "Martinez",
+        nextAppt: "01/26/26 • 8:30 AM",
+        roStatus: "Scheduled",
+        apptId: "APT-55219",
+        serviceType: "Oil + Multi-point"
+      },
+      "1FMCU0G63LUA12345": {
+        type: "appraisal",
+        label: "Recent Appraisal",
+        customerLast: "Johnson",
+        appraisedDaysAgo: 18,
+        appraisalId: "APR-10493",
+        serviceType: "Trade appraisal"
+      }
+    };
+
+    function sourceForVin(vin){
+      const v=(vin||"").trim().toUpperCase();
+      return SOURCE_DATA[v] || { type:"market", label:"Market", note:"No internal source signal found yet." };
+    }
+
+    function sourceChip(src){
+      const type = (src && src.type) ? String(src.type) : "market";
+      const tone = type==="service" ? "good" : (type==="service_upcoming" || type==="appraisal") ? "warn" : "";
+      const icon = type==="service" ? "🛠" : type==="service_upcoming" ? "🗓" : type==="appraisal" ? "📝" : "📊";
+      return `<div class="badge ${tone}" style="display:inline-flex; align-items:center; gap:8px;">
+                <span style="opacity:.95">${icon}</span>
+                <span>${escapeHtml(src.label || "Source")}</span>
+              </div>`;
+    }
+
+    function kvRow(k,v,opts){
+      opts=opts||{};
+      const emph = opts.emph ? 'color:rgba(225,255,241,.95);' : '';
+      const mono = opts.mono ? 'font-family:var(--mono);' : '';
+      return `<div class="k"><div class="l">${escapeHtml(k)}</div><div class="v" style="${emph}${mono}">${escapeHtml(v||"—")}</div></div>`;
+    }
+
+    
+    function renderSourceRightPanel(vin){
+      const src = sourceForVin(vin);
+      const chip = sourceChip(src);
+
+      const cell = (k,v,opts)=>{
+        opts=opts||{};
+        const emph = opts.emph ? ' emph' : '';
+        const mono = opts.mono ? ' style="font-family:var(--mono); font-size:16px;"' : '';
+        return `<div class="sourceCell">
+                  <div class="k">${escapeHtml(k)}</div>
+                  <div class="v${emph}"${mono}>${escapeHtml(v||"—")}</div>
+                </div>`;
+      };
+
+      let grid = '';
+      let foot = '';
+
+      if(src.type==="service"){
+        grid = [
+          cell('Customer', src.customerLast),
+          cell('Status', src.roStatus),
+          cell('Last Service', `Serviced ${src.lastServiceDaysAgo} days ago`, {emph:true}),
+          cell('RO #', src.roNumber, {mono:true}),
+          cell('RO Close Date', src.roCloseDate),
+          cell('Service Type', src.serviceType)
+        ].join('');
+        foot = `Outcome is surfacing this vehicle because it’s a <strong>high-probability reacquisition</strong>: known customer, known history, known store.`;
+      } else if(src.type==="service_upcoming"){
+        grid = [
+          cell('Customer', src.customerLast),
+          cell('Status', src.roStatus),
+          cell('Next Appt', src.nextAppt, {emph:true}),
+          cell('Appt ID', src.apptId, {mono:true}),
+          cell('Service Type', src.serviceType),
+          cell('Reacquire Angle', 'Appointment touchpoint')
+        ].join('');
+        foot = `This is an <strong>in-lane opportunity</strong>. Timing is the advantage — you already have the customer in motion.`;
+      } else if(src.type==="appraisal"){
+        grid = [
+          cell('Customer', src.customerLast),
+          cell('Status', 'Not in Inventory'),
+          cell('Last Touch', `Appraised ${src.appraisedDaysAgo} days ago`, {emph:true}),
+          cell('Appraisal ID', src.appraisalId, {mono:true}),
+          cell('Source Type', src.serviceType),
+          cell('Reacquire Angle', 'Valuation already known')
+        ].join('');
+        foot = `Outcome flags this because the store already did the hard part — <strong>the number is known</strong>.`;
+      } else {
+        grid = [
+          cell('Source', src.label || 'Market'),
+          cell('Status', 'No internal signal'),
+          cell('Note', src.note || 'No internal source signal found yet.'),
+          cell('Unlock', 'Add service/appraisal feed'),
+          cell('Angle', 'Lane-based sourcing'),
+          cell('Confidence', 'Higher over time')
+        ].join('');
+        foot = `Add a service/appraisal feed to unlock lane-based sourcing and higher-confidence opportunities.`;
+      }
+
+      return `
+        <div class="sourcePanel">
+          <div class="sourceHdr">
+            <div class="sourceTitle">Sourcing</div>
+            <div>${chip}</div>
+          </div>
+          <div class="sourceGrid">${grid}</div>
+          <div class="foot" style="margin-top:10px;">${foot}</div>
+        </div>
+      `;
+    }
+
+
+function renderCOIRightPanel(ctx, dollars){
+  const mode = String(ctx||window.__memoryContext||'memory').toLowerCase();
+  const isAcquire = mode === 'acquire';
+  const isStop = mode === 'stop';
+  const isStore = mode === 'store';
+
+  const money = dollars || '—';
+
+  if(isStore){
+    return `
+      <div class="coiPanel">
+        <div class="coiCard">
+          <div class="coiTopRow">
+            <div class="coiTopLeft">
+              <div class="coiKicker">COST OF INACTION</div>
+              <div class="coiMeta">This Month (Store Total)<br/>Missed buys + bad holds</div>
+            </div>
+            <div class="coiPill">Cost of Inaction: ${escapeHtml(money)}</div>
+          </div>
+
+          <div class="coiMidRow">
+            <div class="coiAction">
+              <span class="coiDot warn"></span>
+              <div class="coiActionText">Here’s the Leak</div>
+            </div>
+            <div class="coiMeaning">This is the cost of <strong>doing nothing</strong></div>
+          </div>
+
+          <div class="coiBody">
+            <div class="coiLead">You’re leaking <span class="money">${escapeHtml(money)}</span> this month by ignoring clear actions.</div>
+            <div class="coiSubline">Passing on winners + holding losers</div>
+
+            <div class="coiGrid">
+              <div class="coiCell"><div class="lbl">Leak Type</div><div class="val">Missed Buys</div></div>
+              <div class="coiCell"><div class="lbl">Leak Type</div><div class="val">Bad Holds</div></div>
+              <div class="coiCell"><div class="lbl">Decision Fix</div><div class="val">BUY / DON’T BUY</div></div>
+              <div class="coiCell"><div class="lbl">Outcome Fix</div><div class="val">Act faster</div></div>
+            </div>
+
+            <div class="coiRule">Dealer-simple meaning: “We’re losing money two ways — by passing on good cars and keeping bad ones.”</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if(isStop){
+    return `
+      <div class="coiPanel">
+        <div class="coiCard">
+          <div class="coiTopRow">
+            <div class="coiTopLeft">
+              <div class="coiKicker">STOP BUYING</div>
+            </div>
+            <div class="coiPill">Cost of Inaction: ${escapeHtml(money)}</div>
+          </div>
+
+          <div class="coiMidRow">
+            <div class="coiAction">
+              <span class="coiDot bad"></span>
+              <div class="coiActionText">Don’t Buy This</div>
+            </div>
+            <div class="coiMeaning">This is the cost of <strong>buying</strong></div>
+          </div>
+
+          <div class="coiBody">
+            <div class="coiLead">You lose <span class="money">${escapeHtml(money)}</span> by buying/holding this vehicle if it lands.</div>
+            <div class="coiSubline">Aging compression + recon variance + capital drag</div>
+
+            <div class="coiGrid">
+              <div class="coiCell"><div class="lbl">COI Direction</div><div class="val">KEEPING / OWNED</div></div>
+              <div class="coiCell"><div class="lbl">Primary Driver</div><div class="val">Aging + recon</div></div>
+              <div class="coiCell"><div class="lbl">How it shows up</div><div class="val">Price cuts</div></div>
+              <div class="coiCell"><div class="lbl">Timing</div><div class="val">14–45 days</div></div>
+            </div>
+
+            <div class="coiRule">Dealer-simple meaning: “This car bleeds us every day we keep it.”</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Acquire (default)
+  return `
+    <div class="coiPanel">
+      <div class="coiCard">
+        <div class="coiTopRow">
+          <div class="coiTopLeft">
+            <div class="coiKicker">ACQUIRE NOW</div>
+          </div>
+          <div class="coiPill">Cost of Inaction: ${escapeHtml(money)}</div>
+        </div>
+
+        <div class="coiMidRow">
+          <div class="coiAction">
+            <span class="coiDot"></span>
+            <div class="coiActionText">Buy This</div>
+          </div>
+          <div class="coiMeaning">This is the cost of <strong>passing</strong></div>
+        </div>
+
+        <div class="coiBody">
+          <div class="coiLead">You lose <span class="money">${escapeHtml(money)}</span> by not buying this vehicle while demand is hot.</div>
+          <div class="coiSubline">Missed front gross + missed velocity window + missed share</div>
+
+          <div class="coiGrid">
+            <div class="coiCell"><div class="lbl">COI Direction</div><div class="val">NOT BUYING</div></div>
+            <div class="coiCell"><div class="lbl">Primary Driver</div><div class="val">Demand window</div></div>
+            <div class="coiCell"><div class="lbl">How it shows up</div><div class="val">Missed gross</div></div>
+            <div class="coiCell"><div class="lbl">Timing</div><div class="val">7–14 days</div></div>
+          </div>
+
+          <div class="coiRule">Dealer-simple meaning: “This was a layup and we passed.”</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+
+
     const AUCTION_GUARDRAIL = {
       "1FTEW1EP5MFA12345": { status:"Within Guardrail", rationale:"Wholesale constraints are aligned with your discipline line." },
       "1FM5K8D86LGA12345": { status:"Within Guardrail", rationale:"Guardrail is satisfied at the discipline line." },
@@ -825,7 +1954,7 @@
     const STOP_BUYING_UNITS = [
       {
         ymmt:"2018 Ford Escape SE",
-        vin:"1FTEW1EP5MFA12345",
+        vin:"1FMCU0G63LUA12345",
         flag:"High Risk Buy",
         signal:"Recon variance + thin buffer above the line",
         impact:"Average front compresses after Day 21; markdowns compound quickly.",
@@ -840,8 +1969,8 @@
         guidance:"If you buy it, buy tight and retail fast—otherwise walk."
       },
       {
-        ymmt:"2021 Ford F-150 XLT",
-        vin:"1FMCU0G63LUA12345",
+        ymmt:"2022 Chevrolet Equinox LT",
+        vin:"3GNAXKEV2NL118902",
         flag:"High Risk Buy",
         signal:"Discipline required to protect gross goal",
         impact:"Stretching above the line turns a good truck into a thin-margin deal.",
@@ -857,7 +1986,364 @@
 
 
     // Top 10 "store insights" (demo-safe now; in real mode these come from dealer's own deal history + recon + days-to-turn)
-    const TOP_INSIGHTS = [
+    
+// ============================================================
+// Locked decision thresholds + confidence bands (segment-first)
+// ============================================================
+// IMPORTANT: This is intentionally "system logic" only — no modal wiring touched.
+// Output lists are consumed by existing render functions unchanged.
+
+const DECISION_THRESHOLDS = {
+  // Segment-first gating (recommendations only when signal is repeatable)
+  // These thresholds are intentionally conservative for dealer trust.
+  windowMonths: 24,
+
+  // Minimum segment sample to issue ANY recommendation (Acquire/Stop)
+  minUnitsForDecision: 5,
+
+  // Confidence bands (used for labels + disclosure)
+  minUnitsForHigh: 8,
+  minUnitsForMedium: 5,
+
+  // Acquire Now (segment qualifies only if ALL pass)
+  acquire: {
+    // Compare to store baselines (computed from all VIN_DATA rows)
+    minFrontDelta: 750,     // fg_mean >= FG_median + 750
+    maxDaysDelta: -7,       // dts_median <= DTS_median - 7
+    maxReconDelta: 150,     // recon_median <= Recon_median + 150 (absolute $; demo-safe)
+    maxGrossCV: 0.55,       // stable gross pattern
+    maxPctOver45: 0.20      // tail-risk guard
+  },
+
+  // Stop Buying (segment flags if 2-of-4 triggers hit)
+  stop: {
+    maxFrontDelta: -500,    // fg_mean <= FG_median - 500  OR <= 250
+    maxFrontAbsolute: 250,
+    minDaysDelta: 10,       // dts_median >= DTS_median + 10
+    minReconDelta: 350,     // recon_median >= Recon_median + 350
+    minPctOver60: 0.25,     // aging tail risk
+    hardStop: { minFront: 0, minPctOver60: 0.20 }
+  }
+};
+
+function parseUnits(x){
+  const s = String(x||"").toLowerCase();
+  const m = s.match(/(\d+)/);
+  return m ? Number(m[1]) : 0;
+}
+function parseDays(x){
+  const n = parseMoneySafe(x); // handles "23" etc
+  return Number.isFinite(n) ? n : parseUnits(x);
+}
+function moneyNum(x){
+  const n = parseMoneySafe(x);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function readinessPct(){
+  try{
+    return (typeof calcReadiness==="function" && typeof __readinessCoverage==="object")
+      ? calcReadiness(__readinessCoverage)
+      : 70;
+  } catch(e){ return 70; }
+}
+
+function confidenceBandFor(meta){
+  const units = parseUnits(meta.owned);
+  const r = readinessPct();
+  if(units >= DECISION_THRESHOLDS.minUnitsForHigh && r >= 85) return "High";
+  if(units >= DECISION_THRESHOLDS.minUnitsForMedium && r >= 65) return "Medium";
+  if(units >= 1) return "Limited";
+  return "Limited";
+}
+
+function qualifiesAcquire(meta){
+  const units = parseUnits(meta.owned);
+  if(units < DECISION_THRESHOLDS.minUnitsForDecision) return false;
+  if(String(meta.risk||"") === DECISION_THRESHOLDS.acquire.disallowRisk) return false;
+  const days = parseDays(meta.days);
+  const front = moneyNum(meta.front);
+  const recon = moneyNum(meta.recon);
+  return (days>0 && days <= DECISION_THRESHOLDS.acquire.maxDays) &&
+         (front >= DECISION_THRESHOLDS.acquire.minFront) &&
+         (recon > 0 && recon <= DECISION_THRESHOLDS.acquire.maxRecon);
+}
+
+function qualifiesStop(meta){
+  const units = parseUnits(meta.owned);
+  if(units < DECISION_THRESHOLDS.minUnitsForDecision) return false;
+  if(String(meta.risk||"") === DECISION_THRESHOLDS.stop.forceRisk) return true;
+  const days = parseDays(meta.days);
+  const front = moneyNum(meta.front);
+  const recon = moneyNum(meta.recon);
+  return (days >= DECISION_THRESHOLDS.stop.minDays) ||
+         (front > 0 && front <= DECISION_THRESHOLDS.stop.maxFront) ||
+         (recon >= DECISION_THRESHOLDS.stop.minRecon);
+}
+
+function signalBandForVin(vin){
+  const v = String(vin||"").trim().toUpperCase();
+  const meta = VIN_DATA[v] || {};
+  const units = parseUnits(meta.owned);
+  const band = confidenceBandFor(meta);
+  const capped = (units < DECISION_THRESHOLDS.minUnitsForMedium) ? "Limited" : band;
+  return {
+    vin: v,
+    band: capped,
+    units,
+    readiness: readinessPct(),
+    meta
+  };
+}
+
+function limitedSignalBanner(sig){
+  const units = sig && sig.units ? sig.units : 0;
+  return `
+    <div class="limitedBanner">
+      <span class="itag warn">Limited Signal</span>
+      <div class="limitedText">
+        Based on <b>${units || 1}</b> owned unit${(units===1)?'':'s'} in the lookback. Outcome will still show the profile, but confidence is capped until the sample grows.
+      </div>
+    </div>
+  `;
+}
+
+function buildWhyAcquire(meta){
+  const days = parseDays(meta.days);
+  const front = moneyNum(meta.front);
+  const recon = moneyNum(meta.recon);
+  const parts = [];
+  if(days) parts.push(`Turn: ${days}d`);
+  if(front) parts.push(`Front: ${fmtMoney(front)}`);
+  if(recon) parts.push(`Recon: ${fmtMoney(recon)}`);
+  return parts.length ? parts.join(" • ") : (meta.loss || "Strong profile. Stay disciplined and verify recon.");
+}
+
+function buildWhyStop(meta){
+  const days = parseDays(meta.days);
+  const front = moneyNum(meta.front);
+  const recon = moneyNum(meta.recon);
+  if(String(meta.risk||"")==="High") return "High risk profile — thin buffer and high downside if discipline slips.";
+  const parts = [];
+  if(days >= DECISION_THRESHOLDS.stop.minDays) parts.push(`Slow turn (${days}d)`);
+  if(front && front <= DECISION_THRESHOLDS.stop.maxFront) parts.push(`Weak front (${fmtMoney(front)})`);
+  if(recon >= DECISION_THRESHOLDS.stop.minRecon) parts.push(`Recon heavy (${fmtMoney(recon)})`);
+  return parts.length ? parts.join(" • ") : (meta.loss || "Drags performance unless bought perfectly.");
+}
+
+function buildListsFromVinData(){
+  // Segment-first: decide on repeatable patterns; show ONE representative VIN per qualifying segment.
+  const vins = Object.keys(VIN_DATA||{});
+
+  const parseNum = (x)=>{
+    if(x==null) return NaN;
+    if(typeof x === 'number') return x;
+    const s=String(x).trim();
+    const n=Number(s);
+    return Number.isFinite(n) ? n : NaN;
+  };
+
+  const median = (arr)=>{
+    const a = arr.filter(n=>Number.isFinite(n)).slice().sort((x,y)=>x-y);
+    if(!a.length) return NaN;
+    const mid = Math.floor(a.length/2);
+    return a.length%2 ? a[mid] : (a[mid-1]+a[mid])/2;
+  };
+  const mean = (arr)=>{
+    const a=arr.filter(n=>Number.isFinite(n));
+    return a.length ? a.reduce((p,c)=>p+c,0)/a.length : NaN;
+  };
+  const stdev = (arr)=>{
+    const a=arr.filter(n=>Number.isFinite(n));
+    if(a.length<2) return NaN;
+    const m=mean(a);
+    const v=a.reduce((p,c)=>p+Math.pow(c-m,2),0)/(a.length-1);
+    return Math.sqrt(v);
+  };
+  const cv = (arr)=>{
+    const m=mean(arr);
+    const sd=stdev(arr);
+    if(!Number.isFinite(m) || !Number.isFinite(sd) || Math.abs(m)<1) return NaN;
+    return sd/Math.abs(m);
+  };
+
+  const yearBand = (year)=>{
+    if(!Number.isFinite(year)) return "Unknown";
+    const base = year - (year % 2);
+    return `${base}-${base+1}`;
+  };
+
+  const segmentKeyFromMeta = (meta)=>{
+    const ymmt = String(meta?.ymmt||"").trim();
+    // Expect: "2021 Ford F-150 XLT 4x4"
+    const parts = ymmt.split(/\s+/).filter(Boolean);
+    const year = Number(parts[0]);
+    const make = parts[1] || "Unknown";
+    const model = parts[2] || "Model";
+    return `${yearBand(year)} ${make} ${model}`.trim();
+  };
+
+  // Store baselines (demo-safe): medians across all VIN rows.
+  const allFront = [];
+  const allDays = [];
+  const allRecon = [];
+  vins.forEach(v=>{
+    const m = VIN_DATA[v]||{};
+    const fg = parseMoneySafe(m.front);
+    const dts = parseNum(m.days);
+    const rc = parseMoneySafe(m.recon);
+    if(Number.isFinite(fg)) allFront.push(fg);
+    if(Number.isFinite(dts)) allDays.push(dts);
+    if(Number.isFinite(rc)) allRecon.push(rc);
+  });
+  const FG_med = median(allFront);
+  const DTS_med = median(allDays);
+  const Recon_med = median(allRecon);
+
+  
+  // Expose store baselines for proof strips (render-only; no wiring dependency).
+  try{
+    window.__storeBaselines = { FG_med, DTS_med, Recon_med };
+  }catch(e){}
+// Group VIN rows into segments.
+  const segs = {};
+  vins.forEach(v=>{
+    const m = VIN_DATA[v]||{};
+    const key = segmentKeyFromMeta(m);
+    const s = (segs[key] ||= { key, vins: [], ymmt: m.ymmt || getVehicle(v), owned: 0, fronts: [], days: [], recons: [] });
+    s.vins.push(v);
+    s.ymmt = s.ymmt || m.ymmt || getVehicle(v);
+
+    const owned = parseUnits(m.owned);
+    if(Number.isFinite(owned)) s.owned = Math.max(s.owned, owned);
+
+    const fg = parseMoneySafe(m.front);
+    const dts = parseNum(m.days);
+    const rc = parseMoneySafe(m.recon);
+    if(Number.isFinite(fg)) s.fronts.push(fg);
+    if(Number.isFinite(dts)) s.days.push(dts);
+    if(Number.isFinite(rc)) s.recons.push(rc);
+  });
+
+  const acquire = [];
+  const stop = [];
+
+  const confBandFromOwned = (owned)=>{
+    if(owned >= DECISION_THRESHOLDS.minUnitsForHigh) return "High";
+    if(owned >= DECISION_THRESHOLDS.minUnitsForMedium) return "Medium";
+    return "Limited";
+  };
+
+  const pct = (arr, pred)=>{
+    if(!arr.length) return 0;
+    const hit = arr.filter(pred).length;
+    return hit/arr.length;
+  };
+
+  const pickRepresentativeVin = (seg)=>{
+    // Prefer a VIN that exists in GOV_HISTORY lists (if any), else first.
+    const candidates = seg.vins.slice();
+    return candidates[0] || "";
+  };
+
+  Object.values(segs).forEach(seg=>{
+    const owned = seg.owned || 0;
+    const band = confBandFromOwned(owned);
+
+    // Hard gate for recommendations
+    if(owned < DECISION_THRESHOLDS.minUnitsForDecision) return;
+    if(band === "Limited") return;
+
+    const fg_mean = mean(seg.fronts);
+    const fg_cv = cv(seg.fronts);
+    const dts_med = median(seg.days);
+    const rc_med = median(seg.recons);
+    const pctOver45 = pct(seg.days, d=>Number.isFinite(d) && d>45);
+    const pctOver60 = pct(seg.days, d=>Number.isFinite(d) && d>60);
+
+    // Acquire: ALL pass
+    const a = DECISION_THRESHOLDS.acquire;
+    const acquireOk =
+      (Number.isFinite(fg_mean) && Number.isFinite(FG_med) && fg_mean >= (FG_med + a.minFrontDelta)) &&
+      (Number.isFinite(dts_med) && Number.isFinite(DTS_med) && dts_med <= (DTS_med + a.maxDaysDelta)) &&
+      (Number.isFinite(rc_med) && Number.isFinite(Recon_med) && rc_med <= (Recon_med + a.maxReconDelta)) &&
+      (!Number.isFinite(fg_cv) || fg_cv <= a.maxGrossCV) &&
+      (pctOver45 <= a.maxPctOver45);
+
+    // Stop: 2-of-4 triggers (plus optional hard stop)
+    const s = DECISION_THRESHOLDS.stop;
+    const t1 = (Number.isFinite(fg_mean) && Number.isFinite(FG_med) && (fg_mean <= (FG_med + s.maxFrontDelta) || fg_mean <= s.maxFrontAbsolute));
+    const t2 = (Number.isFinite(dts_med) && Number.isFinite(DTS_med) && dts_med >= (DTS_med + s.minDaysDelta));
+    const t3 = (Number.isFinite(rc_med) && Number.isFinite(Recon_med) && rc_med >= (Recon_med + s.minReconDelta));
+    const t4 = (pctOver60 >= s.minPctOver60);
+    const hardStop = (Number.isFinite(fg_mean) && fg_mean < s.hardStop.minFront && pctOver60 >= s.hardStop.minPctOver60);
+    const trigCount = [t1,t2,t3,t4].filter(Boolean).length;
+    const stopOk = hardStop || (trigCount >= 2);
+
+    const vin = pickRepresentativeVin(seg);
+    const meta = VIN_DATA[vin] || {};
+
+    if(acquireOk){
+      const whyBits = [];
+      if(Number.isFinite(dts_med) && Number.isFinite(DTS_med)) whyBits.push(`Turns in <b>${Math.round(dts_med)} days</b> (store median ${Math.round(DTS_med)}).`);
+      if(Number.isFinite(fg_mean) && Number.isFinite(FG_med)) whyBits.push(`Avg front <b>${fmtMoney(Math.round(fg_mean))}</b> (median ${fmtMoney(Math.round(FG_med))}).`);
+      if(Number.isFinite(rc_med) && Number.isFinite(Recon_med)) whyBits.push(`Recon holds at <b>${fmtMoney(Math.round(rc_med))}</b>.`);
+      acquire.push({
+        ymmt: meta.ymmt || seg.ymmt,
+        vin,
+        conf: band,
+        segment: seg.key,
+        segmentLabel: String(seg.key||"").replace(/(\d{4})-(\d{4})/, "$1–$2"),
+        owned,
+        why: whyBits.slice(0,2).join(" "),
+        buyTo: meta.buyTo || "—",
+        // Proof metrics (segment-first)
+        proof: {
+          fg_mean, fg_cv,
+          dts_med,
+          rc_med,
+          pctOver45,
+          // Store baselines
+          FG_med, DTS_med, Recon_med
+        }
+      });
+    } else if(stopOk){
+      const whyBits = [];
+      if(t2 && Number.isFinite(dts_med)) whyBits.push(`Median days <b>${Math.round(dts_med)}</b> — capital drags.`);
+      if(t1 && Number.isFinite(fg_mean)) whyBits.push(`Front compresses to <b>${fmtMoney(Math.round(fg_mean))}</b>.`);
+      if(t3 && Number.isFinite(rc_med)) whyBits.push(`Recon variance risk at <b>${fmtMoney(Math.round(rc_med))}</b>.`);
+      if(t4) whyBits.push(`Aging tail: <b>${Math.round(pctOver60*100)}%</b> over 60 days.`);
+      stop.push({
+        ymmt: meta.ymmt || seg.ymmt,
+        vin,
+        segment: seg.key,
+        segmentLabel: String(seg.key||"").replace(/(\d{4})-(\d{4})/, "$1–$2"),
+        owned,
+        flag: "High Risk Buy",
+        signal: whyBits.slice(0,2).join(" "),
+        impact: meta.loss || "Capital drag compounds as age builds.",
+        guidance: "If you buy it, buy under your Exception Line, verify recon scope, and price aggressively from Day 1.",
+        proof: {
+          fg_mean, fg_cv,
+          dts_med,
+          rc_med,
+          pctOver60,
+          // Store baselines
+          FG_med, DTS_med, Recon_med
+        },
+        triggers: { t1, t2, t3, t4, hardStop, trigCount }
+      });
+    }
+  });
+
+  // Stable ordering: best confidence first, then alphabetic.
+  const ord = (x)=> x.conf==="High"?0 : x.conf==="Medium"?1 : 2;
+  acquire.sort((a,b)=> ord(a)-ord(b) || a.ymmt.localeCompare(b.ymmt));
+  stop.sort((a,b)=> a.ymmt.localeCompare(b.ymmt));
+  return { acquire, stop };
+}
+
+const TOP_INSIGHTS = [
       { tag:"Leakage", tone:"warn", text:"Price cuts after Day 18 are compressing gross by ~$1.1k on Explorer profiles.", drill:"COI" },
       { tag:"Speed", tone:"good", text:"Same-day buying decisions protect margin on hot truck profiles (F-150/compact pickups).", drill:"Acquire" },
       { tag:"Recon", tone:"bad",  text:"High recon variance is the #1 reason deals miss front gross on SUVs.", drill:"Assist" },
@@ -904,6 +2390,9 @@
     const rightTitle = document.getElementById('rightTitle');
     const rightBadge = document.getElementById('rightBadge');
     const rightBody = document.getElementById('rightBody');
+  // Aliases for legacy helpers (some functions reference these older names)
+  const leftBody = leftExtra;
+  const modalBody = rightBody;
 
     const dialArc = document.getElementById('dialArc');
     const dialLetter = document.getElementById('dialLetter');
@@ -943,7 +2432,7 @@
     }
 
     function updateGovPillVisibility(){
-      const vin = (vinInput.value||'').trim().toUpperCase();
+      const vin = (isValidVin(window.__activeVin||'') ? String(window.__activeVin).trim().toUpperCase() : (vinInput.value||'').trim().toUpperCase());
       if(!vin){
         setVinUI('empty');
         govPill.classList.add('hidden');
@@ -1021,33 +2510,35 @@
     // Dealer language: no acronyms required, but we keep it punchy.
     function buildGovSummaryLine(vin){
       const v=(vin||'').trim().toUpperCase();
-      // Only show when VIN is syntactically valid.
-      if(!isValidVin(v)) return '<div class="left"><span class="pill"><span class="dot"></span>Buy Decision</span> Enter a valid VIN to see store pattern risk.</div><span></span>';
+      if(!isValidVin(v)) return '';
+      const meta = VIN_DATA[v] || {};
+      const recRaw = String(meta.rec || '—');
+      const rec = recRaw.toLowerCase();
+      // Dealer-simple mapping:
+      // - Buy => BUY THIS
+      // - Caution => BUY TIGHT
+      // - High Risk / Stop => DON'T BUY
+      let verdictLabel = 'BUY TIGHT';
+      let tone = 'warn';
+      if(rec.includes('buy') && !rec.includes('risk') && !rec.includes('caution')){ verdictLabel = 'BUY THIS'; tone='good'; }
+      if(rec.includes('risk') || rec.includes('stop') || rec.includes('high')){ verdictLabel = 'DON\'T BUY'; tone='bad'; }
 
-      const row = GOV_HISTORY.find(r=>r.vin===v) || null;
-      if(!row){
-        return '<div class="left"><span class="pill"><span class="dot"></span>Buy Decision</span> No store pattern yet for this VIN profile.</div><a href="#" onclick="openGov();return false;">View</a>';
-      }
+      const pct = Math.round(Math.min(100, Math.max(0, overallConfidencePct(meta))));
+      const dotCls = tone==='good' ? 'good' : tone==='bad' ? 'bad' : 'warn';
 
-      const { storeAvgDom, segments } = computeCvi(GOV_HISTORY);
-      const seg = segments.find(s=>s.segment===row.segment) || {cvi:1, segAvgDom: row.dom};
-
-      const { segScores, buyerScores } = computeBias(GOV_HISTORY);
-      const segRisk = (segScores.find(s=>s.segment===row.segment) || {lossRate:0}).lossRate;
-      const buyerRisk = (buyerScores.find(b=>b.buyer===row.buyer) || {lossRate:0}).lossRate;
-      const combined = (segRisk*0.55 + buyerRisk*0.45);
-
-      // Convert to simple dealer-risk buckets
-      let riskWord='Low'; let cls='good';
-      if(combined>=0.55 || seg.cvi>1.20){ riskWord='High'; cls='bad'; }
-      else if(combined>=0.33 || seg.cvi>1.05){ riskWord='Medium'; cls='warn'; }
-
-      const cashWord = seg.cvi>1.10 ? 'Cash comes back slow' : (seg.cvi<0.95 ? 'Cash comes back fast' : 'Cash comes back normal');
-      const patternWord = combined>=0.33 ? 'This store usually gets hurt here' : 'No big pattern risk';
-
-      // One line + button
-      return `<div class="left"><span class="pill ${cls}"><span class="dot"></span>Buy Decision: ${riskWord}</span> ${patternWord} · ${cashWord}</div>` +
-             `<a href="#" onclick="openGov();return false;">View</a>`;
+      return `
+        <div class="left">
+          <span class="pill ${tone}">
+            <span class="dot ${dotCls}"></span>
+            <span style="letter-spacing:.12em; font-weight:950;">BUY DECISION</span>
+            <span style="opacity:.85;">•</span>
+            <span style="font-weight:950;">${verdictLabel}</span>
+            <span class="pctMini" style="margin-left:6px;">${pct}%</span>
+          </span>
+          <span style="opacity:.78;">Click to see the store pattern behind this call.</span>
+        </div>
+        <a href="#" onclick="window.__openGovFor('${v}');return false;" style="font-weight:950;">Open</a>
+      `;
     }
 
 
@@ -1119,12 +2610,27 @@
     }
 
     function openGov(){
-      const vin = (vinInput.value||'').trim().toUpperCase();
-      if(!isValidVin(vin)) return;
-      govModal.classList.add('open');
-      govModal.setAttribute('aria-hidden','false');
-      renderGov();
-    }
+  const fromActive = (window.__activeVin||"").trim().toUpperCase();
+  const fromInput  = (vinInput.value||"").trim().toUpperCase();
+  const vin = isValidVin(fromActive) ? fromActive : fromInput;
+  if(!isValidVin(vin)) return;
+  // Use active VIN; do not write back into the main VIN input.
+  window.__activeVin = vin;
+  updateGovPillVisibility();
+  govModal.classList.add('open');
+  govModal.setAttribute('aria-hidden','false');
+  renderGov();
+}
+
+// Used by Outcome Memory / lists so "Buy Decision" always opens correctly.
+window.__openGovFor = (vin)=>{
+  const v=(vin||'').trim().toUpperCase();
+  if(!isValidVin(v)) return;
+  window.__activeVin = v;
+  updateGovPillVisibility();
+  openGov();
+};
+
     function closeGov(){
       govModal.classList.remove('open');
       govModal.setAttribute('aria-hidden','true');
@@ -1135,7 +2641,7 @@
       const setHTML = (id, html)=>{ const el=document.getElementById(id); if(el) el.innerHTML = html||''; };
       const shortVin = (v)=> v ? (v.slice(0,8)+'…'+v.slice(-4)) : '—';
 
-      const vin = (vinInput.value||'').trim().toUpperCase();
+      const vin = (isValidVin(window.__activeVin||'') ? String(window.__activeVin).trim().toUpperCase() : (vinInput.value||'').trim().toUpperCase());
       const row = GOV_HISTORY.find(r=>r.vin===vin);
       const meta = VIN_DATA[vin] || {};
 
@@ -1296,10 +2802,33 @@
 
     function showBack(show){ show ? btnBack.classList.add('show') : btnBack.classList.remove('show'); }
     function openModal(){ modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); }
+
+    
+
+    function wireMemoryRowClicks(){
+      document.querySelectorAll('[data-memrow="1"]').forEach(el=>{
+        if(el.__wired) return;
+        el.__wired = true;
+        el.addEventListener('click', ()=>{
+          const vin = (el.getAttribute('data-vin')||'').trim();
+          const ctx = (el.getAttribute('data-ctx')||'memory').trim();
+          if(window.__drillMemory) window.__drillMemory(vin, ctx);
+        });
+      });
+    }
+function cleanupMemoryArtifacts(){
+      // Outcome Memory injects a governance one-liner under leftIntro; remove it when switching views
+      const g = document.getElementById('govSummaryLine');
+      if(g) g.remove();
+    }
+
     function closeModal(){
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden','true');
       viewStack=[]; currentView=null; showBack(false);
+      cleanupMemoryArtifacts();
+      if(vinInput) vinInput.value='';
+      window.__activeVin=''; window.__CURRENT_VIN='';
       // Restore dial state if COI temporarily set it
       if(__restoreDialOnClose && __dialSnapshot!==null){
         setDial(__dialSnapshot);
@@ -1307,7 +2836,9 @@
       __restoreDialOnClose = false;
     }
     function navigate(renderFn, args){
-      
+      // Always reset sheet layout before switching views (Acquire/Stop may re-enable singlePane).
+      try{ modal.querySelector('.sheet')?.classList.remove('singlePane'); }catch(e){}
+
       // Snapshot dial before opening COI so closing COI doesn't mutate the global gauge
       if(renderFn === renderCOI){
         __dialSnapshot = (dialText && dialText.textContent) ? dialText.textContent : null;
@@ -1315,13 +2846,48 @@
       } else {
         __restoreDialOnClose = false;
       }
-if(currentView) viewStack.push(currentView);
+
+      cleanupMemoryArtifacts();
+      if(currentView) viewStack.push(currentView);
       currentView = { renderFn, args };
       showBack(viewStack.length>0);
-      renderFn.apply(null, args || []);
+
+      try{
+        renderFn.apply(null, args || []);
+      }catch(err){
+        console.error("[Outcome] View render failed:", err);
+
+        // Render a visible error card so clicks don't look like 'nothing happens'
+        try{
+          modalTitle.textContent = "Error";
+          modalSub.textContent = "A view failed to render";
+
+          setQuickChips(chip("Fix", "Open Console to see details", "warn"));
+
+          leftTitle.textContent = "What happened";
+          leftBadge.textContent = "Script error";
+          setBadge(leftBadge, "Bad");
+          leftIntro.textContent = "A JavaScript error prevented this panel from loading. This is fixable — the Console will show the exact line.";
+
+          leftKv.innerHTML = kvCard("Next step", "Copy the first red error line", "Paste it back here so we can patch the exact function.");
+          leftExtra.innerHTML = "";
+
+          rightTitle.textContent = "Details";
+          rightBadge.textContent = "Debug";
+          setBadge(rightBadge, "Medium");
+          rightBody.innerHTML = `
+            <div class="coiCard">
+              <div class="coiMuted"><b>Error:</b> ${String(err && err.message ? err.message : err)}</div>
+              <div class="divider"></div>
+              <div class="coiMuted">Open <b>DevTools → Console</b>. Copy the first red error line (file + line #).</div>
+            </div>`;
+        }catch(_){}
+      }
+
       openModal();
     }
     function goBack(){
+      cleanupMemoryArtifacts();
       const prev = viewStack.pop();
       currentView = prev || null;
       showBack(viewStack.length>0);
@@ -1464,9 +3030,8 @@ if(currentView) viewStack.push(currentView);
 
       leftTitle.textContent="Coverage Breakdown";
       leftBadge.textContent=`Readiness: ${__readinessPct}%`; setBadge(leftBadge, __readinessBand.label);
-      leftIntro.textContent="Internal view: dealers see one number unless you choose to show this.";
-
-      const rows = READINESS_PILLARS.map(p=>{
+      leftIntro.textContent="";
+  const rows = READINESS_PILLARS.map(p=>{
         const s = clamp(Number(__readinessCoverage[p.key] ?? 0), 0, 100);
         return `
           <div style="padding:10px; border:1px solid rgba(255,255,255,.10); border-radius:14px; background: rgba(255,255,255,.03);">
@@ -1484,21 +3049,74 @@ if(currentView) viewStack.push(currentView);
         `;
       }).join("");
 
-      leftKv.innerHTML = kvCard("Decision Data Coverage", `${__readinessPct}%`, `Confidence cap: ${__readinessMaxConfidence}.`) +
-                         kvCard("What to do next", "Connect the gaps", "Missing pillars become a roadmap — not an objection.");
-      leftExtra.innerHTML = `<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">${rows}</div>`;
+      leftKv.innerHTML="";
+  leftExtra.innerHTML = `<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">${rows}</div>`;
 
-      rightTitle.textContent="Dealer explanation";
-      rightBadge.textContent="3rd-grade simple"; setBadge(rightBadge,"High");
-      rightBody.innerHTML = `
-        <div class="foot">Use this script:</div>
-        <div class="foot" style="margin-top:10px;">“Data Readiness shows how much of your dealership’s decision data Outcome AI can see today. More data makes the recommendations more confident.”</div>
-        <div class="foot" style="margin-top:10px;">This is <strong>not</strong> a grade. It’s a connectivity score.</div>
-        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-          <div class="btn primary" id="btnReadinessExplain" role="button" tabindex="0">How this works</div>
-        </div>
+      
+      // Dealer-facing content only: Coverage + "what data is needed" guidance
+      rightTitle.textContent = "Data needed to reach 100%";
+      rightBadge.textContent = "Next step";
+      setBadge(rightBadge, "Medium");
+
+      // Identify gaps
+      const gaps = [];
+      READINESS_PILLARS.forEach((p)=>{
+        const v = __readinessCoverage[p.key] ?? 0;
+        if(v < 100) gaps.push({ key: p.key, name: p.name, v });
+      });
+
+const map = {
+        equity: { title:"Internal Equity Signals", from:"CRM / desking (equity position, lead source, close rate)", examples:"VinSolutions / DriveCentric / DealerSocket exports" },
+        service: { title:"Service History + RO", from:"DMS / service lane (RO history, mileage cadence, customer identity)", examples:"DealerTrack / Reynolds / CDK RO export" },
+        inventory: { title:"Inventory + Pricing", from:"Inventory tool (stock list, recon, pricing changes, age)", examples:"vAuto / HomeNet / inventory feed" },
+        sales: { title:"Sales & Gross", from:"CRM / DMS (front gross, days-to-turn, deal outcomes)", examples:"Sales history export" },
+        market: { title:"Market Velocity", from:"Market data (comps, velocity, price bands)", examples:"vAuto / market feed" }
+      };
+
+      function guessBucket(name){
+        const n = (name||"").toLowerCase();
+        if(n.includes("equity")) return "equity";
+        if(n.includes("service") || n.includes("ro")) return "service";
+        if(n.includes("inventory") || n.includes("pricing")) return "inventory";
+        if(n.includes("sales") || n.includes("gross")) return "sales";
+        if(n.includes("market") || n.includes("velocity")) return "market";
+        return "sales";
+      }
+
+      const uniqueBuckets = [];
+      gaps.forEach(g=>{
+        const b = guessBucket(g.name);
+        if(!uniqueBuckets.includes(b)) uniqueBuckets.push(b);
+      });
+
+      const guidance = gaps.length ? `
+    <div class=\"kicker\" style=\"margin:0 0 6px\">How it works</div>
+    <div class=\"muted\">Outcome’s confidence is capped by missing data. The fastest path to higher confidence is filling the lowest coverage pillars first.</div>
+    <div class=\"divider\"></div>
+    
+        <div class="muted">Outcome is only as confident as the data you give it. Anything below <b>100%</b> reduces certainty and caps recommendations.</div>
+        <div class="divider"></div>
+        <div class="muted" style="margin-bottom:8px"><b>Missing inputs:</b></div>
+        ${uniqueBuckets.map(b=>{
+          const d = map[b] || map.sales;
+          return `
+            <div class="coiCard" style="margin-bottom:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <div class="kicker" style="margin:0">${d.title}</div>
+                <span class="pill pill--warn">${Math.max(0,100 - Math.min(100, Math.round(gaps.filter(x=>guessBucket(x.name)===b).reduce((a,c)=>a+c.v,0)/Math.max(1,gaps.filter(x=>guessBucket(x.name)===b).length))))}% gap</span>
+              </div>
+              <div class="coiMuted" style="margin-top:6px"><b>From:</b> ${d.from}</div>
+              <div class="coiMuted" style="margin-top:6px"><b>Example:</b> ${d.examples}</div>
+            </div>
+          `;
+        }).join("")}
+        <div class="coiMuted">Once these feeds are connected (or exported), Coverage hits 100% and Outcome can raise confidence caps.</div>
+      ` : `
+        <div class="muted">You're at <b>100%</b> coverage. Outcome can score with maximum confidence.</div>
       `;
-      setTimeout(()=>{
+
+      rightBody.innerHTML = guidance;
+setTimeout(()=>{
         const b = document.getElementById('btnReadinessExplain');
         if(b){
           b.addEventListener('click', ()=>navigate(renderReadinessExplain,[]));
@@ -1519,13 +3137,23 @@ if(currentView) viewStack.push(currentView);
       modalSub.textContent=vin ? `VIN: ${v} • ${getVehicle(v)}` : "—";
     }
     function chip(label,value,tone){
-      return `<div class="qchip ${tone||""}"><span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,243,251,.74)">${label}</span> ${value}</div>`;
+      return `<div class="qchip ${tone||''}"><span class="qlabel">${label}</span><span class="qval">${value}</span></div>`;
     }
     function setQuickChips(html){ quickChips.innerHTML = html || ""; }
 
     function escapeHtml(s){
       return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
     }
+
+
+function shortSegmentLabel(s){
+  const str = String(s||"").trim();
+  if(!str) return "Segment";
+  const parts = str.split(/\s+/);
+  // Default: Year Make Model (keeps things segment-first vs VIN/trim-specific)
+  // If model is two words (e.g., Grand Cherokee), this may under-capture — we'll improve once real data fields exist.
+  return parts.slice(0,3).join(" ");
+}
     function intakeFor(vin){
       const v=(vin||"").trim().toUpperCase();
       if(!CALL_INTAKE[v]) CALL_INTAKE[v]={sellerAsk:"",mileage:"",notes:""};
@@ -1576,9 +3204,14 @@ if(currentView) viewStack.push(currentView);
 
     function renderMemory(vin){
       const v=(vin||"").trim().toUpperCase();
+      window.__activeVin = v;
       const d=VIN_DATA[v]||null;
       const guard=AUCTION_GUARDRAIL[v]||{status:"Within Guardrail",rationale:"Constraints appear aligned."};
       const peer=PEER_CONTEXT[v]||{label:"—",note:"Peer context becomes available as the dataset expands."};
+
+      // Source Intelligence (used for the Source chip + right panel)
+      const src = sourceForVin(v);
+      const srcTone = (src.type === "service") ? "good" : (src.type === "service_upcoming" || src.type === "appraisal") ? "warn" : "bad";
 
       setModalHeader("Outcome Memory", v);
 
@@ -1607,10 +3240,11 @@ if(currentView) viewStack.push(currentView);
         chip("Turn", data.turn || "—", turnTone) +
         chip("Recon", data.reconVar || "—", reconTone) +
         chip("Guardrail", guard.status, guardTone) +
-        chip("Peers", peer.label, "warn")
+        chip("Peers", peer.label, "warn") +
+        chip("Source", src.label || "—", srcTone)
       );
 
-      leftTitle.textContent="Outcome Memory";
+      leftTitle.textContent="Coverage Breakdown";
       leftIntro.textContent = d ? "Store history found. Outcome is summarizing how this profile behaves in your store."
                                : "No store history found. Outcome will capture this interaction and build memory over time.";
 
@@ -1627,31 +3261,50 @@ if(currentView) viewStack.push(currentView);
       }
       govEl.innerHTML = govLine;
 
-      leftKv.innerHTML =
-        kvCard("Owned", data.owned || "—", "How many times your store has owned this profile.") +
-        kvCard("Avg Front", data.front || "—", "Your store’s average front gross when you retail it.") +
-        kvCard("Avg Recon", data.recon || "—", "Typical recon spend for this profile.") +
-        kvCard("Avg Days", data.days || "—", "How long it usually takes to sell.");
-      leftExtra.innerHTML =
+      leftKv.innerHTML="";
+  leftExtra.innerHTML =
         (d ? `<table class="table"><thead><tr><th>Owned</th><th>Avg Front</th><th>Avg Recon</th><th>Avg Days</th></tr></thead>
               <tbody><tr><td>${data.owned}</td><td>${data.front}</td><td>${data.recon}</td><td>${data.days}</td></tr></tbody></table>` : "") +
         `<div class="foot"><strong>Loss Insight:</strong> ${data.loss}</div>
          <div class="foot"><strong>Peer Context:</strong> ${peer.note}</div>
          <div class="foot"><strong>Auction Guardrail:</strong> ${guard.rationale}</div>`;
       leftBadge.textContent=`Memory Confidence: ${data.confidence}`; setBadge(leftBadge, data.confidence);
+      // Right panel: COI Directional (context-specific)
+      const ctx = (window.__memoryContext || 'memory').toLowerCase();
+      const isAcquire = ctx==='acquire';
+      const isStop = ctx==='stop';
+      const title = 'COI Direction';
+      const label = isAcquire ? 'Cost of Passing' : isStop ? 'Cost of Buying' : 'Cost of Inaction';
+      // Dollars: Acquire uses VIN COI if present; Stop uses fixed preview unless dealer feeds provide coiStop
+      const dollars = isAcquire
+        ? ((data.coi && data.coi!=='—') ? data.coi : '$3,420')
+        : isStop
+          ? (()=>{
+              // Stop Buying: always show VIN-specific downside (Cost of Buying)
+              try{
+                const cobNow = deriveVinCostOfBuying(data);
+                return (isFinite(cobNow) && cobNow>0) ? fmtMoney(cobNow) :
+                       ((data.coiStop && data.coiStop!=='—') ? data.coiStop : ((data.coi && data.coi!=='—') ? data.coi : '$4,180'));
+              }catch(e){
+                return ((data.coiStop && data.coiStop!=='—') ? data.coiStop : ((data.coi && data.coi!=='—') ? data.coi : '$4,180'));
+              }
+            })()
+          : ((data.coi && data.coi!=='—') ? data.coi : '$8,635');
 
-      const intake=intakeFor(v);
-      rightTitle.textContent="Call Intake";
-      rightBadge.textContent=data.coi==="—"?"Cost of Inaction: —":`Cost of Inaction: ${data.coi}`;
-      setBadge(rightBadge,"Medium");
-      rightBody.innerHTML = `
-        <div class="field"><label>Seller Ask</label><input id="intakeAsk" placeholder="Enter seller ask…" value="${escapeHtml(intake.sellerAsk)}" /></div>
-        <div class="field"><label>Mileage</label><input id="intakeMiles" placeholder="Enter mileage…" value="${escapeHtml(intake.mileage)}" /></div>
-        <div class="field"><label>Condition Notes</label><textarea id="intakeNotes" placeholder="Short bullets only…">${escapeHtml(intake.notes)}</textarea></div>
-        <div class="minihelp">Outcome saves this intake to memory. Next time this profile shows up, you move faster and stay disciplined.</div>
-      `;
-      setTimeout(()=>wireIntakeInputs(v),0);
+      if(isAcquire){
+        // Keep sourcing visible at the top, then COI Direction below it
+        rightBody.innerHTML = renderSourceRightPanel(v) + `
+          <div style="height:1px; background:rgba(255,255,255,.08); margin:14px 0;"></div>
+          <div class="coiHdr" style="margin-bottom:8px;">COST OF PASSING</div>
+        ` + renderCOIRightPanel('acquire', dollars);
+      } else if(isStop){
+        rightBody.innerHTML = `<div class="coiHdr" style="margin-bottom:8px;">COST OF OWNING</div>` + renderCOIRightPanel('stop', dollars);
+      } else {
+        rightBody.innerHTML = `<div class="coiHdr" style="margin-bottom:8px;">COST OF INACTION</div>` + renderCOIRightPanel('coi', dollars);
+      }
+
       setDial(data.confidence);
+
     }
 
     function renderAssist(vin){
@@ -1684,14 +3337,12 @@ if(currentView) viewStack.push(currentView);
         chip("Peers", peer.label, "warn")
       );
 
-      leftTitle.textContent="Acquisition Assist";
-      leftIntro.textContent="Run a tight, controlled call. Outcome gives you the discipline line and the questions that protect your margin.";
-      leftBadge.textContent=`Confidence: ${data.confidence}`; setBadge(leftBadge, data.confidence);
+      leftTitle.textContent="Coverage Breakdown";
+      leftIntro.textContent="";
+  leftBadge.textContent=`Confidence: ${data.confidence}`; setBadge(leftBadge, data.confidence);
 
-      leftKv.innerHTML =
-        kvCard("Discipline Line (Buy-To)", disciplineLine, delta>0 ? `Goal gap tightening applied: ${fmtMoney(delta)}.` : "Based on your store memory.") +
-        kvCard("Walk-Away", data.walkAway || "—", "If the seller is above this, you don’t chase.");
-      leftExtra.innerHTML = `
+      leftKv.innerHTML="";
+  leftExtra.innerHTML = `
         <div class="foot"><strong>What Outcome knows about this unit:</strong></div>
         ${data.front !== "—" ? `<table class="table"><thead><tr><th>Owned</th><th>Avg Front</th><th>Avg Recon</th><th>Avg Days</th></tr></thead>
           <tbody><tr><td>${data.owned || "—"}</td><td>${data.front}</td><td>${data.recon}</td><td>${data.days}</td></tr></tbody></table>` : ""}
@@ -1707,7 +3358,7 @@ if(currentView) viewStack.push(currentView);
         <div class="field"><label>Seller Ask</label><input id="intakeAsk" placeholder="Enter seller ask…" value="${escapeHtml(intake.sellerAsk)}" /></div>
         <div class="field"><label>Mileage</label><input id="intakeMiles" placeholder="Enter mileage…" value="${escapeHtml(intake.mileage)}" /></div>
         <div class="field"><label>Condition Notes</label><textarea id="intakeNotes" placeholder="Short bullets only…">${escapeHtml(intake.notes)}</textarea></div>
-        <div class="minihelp"><strong>15-second script:</strong><br/>“I buy these based on what they do for me. I’m going to run it through Outcome and I’ll give you my best number.”</div>
+        <div class="minihelp"><strong>
       `;
       setTimeout(()=>wireIntakeInputs(v),0);
       setDial(data.confidence);
@@ -1715,79 +3366,146 @@ if(currentView) viewStack.push(currentView);
 
     function renderAcquireNow(){
       setQuickChips("");
+      try{ modal.querySelector('.sheet')?.classList.add('singlePane'); }catch(e){}
       modalTitle.textContent="Acquire Now"; modalSub.textContent="Best-fit opportunities";
-      leftTitle.textContent="Opportunity List"; leftBadge.textContent="Focus: Profit"; setBadge(leftBadge,"High");
-      leftIntro.textContent="Click a row to open Outcome Memory instantly.";
-      const rows = ACQUIRE_NOW.map(x=>`
-        <div style="display:flex; justify-content:space-between; gap:10px; padding:10px; border:1px solid rgba(255,255,255,.10); border-radius:14px; background: rgba(255,255,255,.03); cursor:pointer;"
-             onclick="window.__drillMemory('${x.vin}')">
-          <div style="display:flex; flex-direction:column; gap:2px;">
-            <div style="font-size:13px; color:rgba(238,243,251,.92)">${x.ymmt}</div>
-            <div style="font-size:12px; color:rgba(215,224,236,.82); font-family: var(--mono)">${x.vin}</div>
-            <div style="font-size:12px; color:rgba(215,224,236,.78); margin-top:4px;">${x.why}</div>
+      leftTitle.textContent="Coverage Breakdown"; leftBadge.textContent="Focus: Profit"; setBadge(leftBadge,"High");
+      leftIntro.textContent="";
+  
+      const list = ACQUIRE_NOW.filter(x=>VIN_DATA[x.vin]);
+      const b = (window.__storeBaselines||{});
+      const baselineStrip = `
+        <div class="proofStripHdr" aria-label="Store baseline proof strip">
+          <span class="itag">Store median front: <b>${Number.isFinite(b.FG_med)?fmtMoney(Math.round(b.FG_med)):"—"}</b></span>
+          <span class="itag">Store median days: <b>${Number.isFinite(b.DTS_med)?Math.round(b.DTS_med):"—"}</b></span>
+          <span class="itag">Store median recon: <b>${Number.isFinite(b.Recon_med)?fmtMoney(Math.round(b.Recon_med)):"—"}</b></span>
+        </div>
+      `;
+      const tone = (v, dir)=>{ // dir: "upGood" | "downGood"
+        if(!Number.isFinite(v)) return "";
+        if(dir==="upGood") return "good";
+        if(dir==="downGood") return "good";
+        return "";
+      };
+      const rows = list.map(x=>{
+        const p = x.proof || {};
+        const fg = Number.isFinite(p.fg_mean) ? fmtMoney(Math.round(p.fg_mean)) : "—";
+        const dts = Number.isFinite(p.dts_med) ? Math.round(p.dts_med)+"d" : "—";
+        const rc = Number.isFinite(p.rc_med) ? fmtMoney(Math.round(p.rc_med)) : "—";
+        const confTone = (x.conf==="High") ? "good" : (x.conf==="Medium") ? "warn" : "";
+        // Delta-tones (Acquire: higher front is good; lower days/recon is good)
+        const fgTone = (Number.isFinite(p.fg_mean) && Number.isFinite(p.FG_med) && p.fg_mean >= p.FG_med) ? "good" : "warn";
+        const dtsTone = (Number.isFinite(p.dts_med) && Number.isFinite(p.DTS_med) && p.dts_med <= p.DTS_med) ? "good" : "warn";
+        const rcTone = (Number.isFinite(p.rc_med) && Number.isFinite(p.Recon_med) && p.rc_med <= p.Recon_med) ? "good" : "warn";
+        return `
+          <div class="segCard" data-memrow="1" data-vin="${x.vin}" data-ctx="acquire">
+            <div class="segTop">
+              <div style="display:flex; flex-direction:column;">
+                <div class="segTitle">${escapeHtml((x.segmentLabel||x.segment||x.ymmt||"Segment"))}</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; min-width:120px;">
+                <span class="itag ${confTone}">Segment Confidence: <b>${escapeHtml(x.conf||"—")}</b></span>
+                <div style="font-size:11px; color:rgba(215,224,236,.72); letter-spacing:.12em; text-transform:uppercase;">Buy-To</div>
+                <div style="font-size:16px; font-weight:760; color:rgba(238,243,251,.95)">${escapeHtml(x.buyTo||"—")}</div>
+              </div>
+            </div>
+
+            <div class="proofStrip" aria-label="Proof points">
+              <span class="itag ${fgTone}">Front: <b>${fg}</b></span>
+              <span class="itag ${dtsTone}">Days: <b>${dts}</b></span>
+              <span class="itag ${rcTone}">Recon: <b>${rc}</b></span>
+              <span class="itag">Owned: <b>${(x.owned||"—")}</b></span>
+            </div>
+
+            <div class="segWhy">${x.why || ""}</div>
           </div>
-          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; min-width:120px;">
-            <div class="badge ${x.conf==='High'?'good':'warn'}">Confidence: ${x.conf}</div>
-            <div style="font-size:12px; color:rgba(215,224,236,.74); letter-spacing:.12em; text-transform:uppercase;">Buy-To</div>
-            <div style="font-size:16px; font-weight:760; color:rgba(238,243,251,.95)">${x.buyTo}</div>
-          </div>
-        </div>`).join("");
-      leftKv.innerHTML=""; leftExtra.innerHTML=`<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">${rows}</div>`;
-      rightTitle.textContent="How to use"; rightBadge.textContent="Fast drill-down"; setBadge(rightBadge,"Medium");
-      rightBody.innerHTML=`<div class="foot">Click a unit → Outcome Memory opens → discipline line + risk + guardrail in one screen.</div>`;
+        `;
+      }).join("");
+      const rowsHtml = rows || '<div class="foot">No eligible Acquire Now segments yet — add more history to unlock repeatable patterns.</div>';
+      leftKv.innerHTML="";
+      leftExtra.innerHTML = `${baselineStrip}<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">${rowsHtml}</div>`;
+      rightTitle.textContent=''; rightBadge.textContent='';
+      rightBody.innerHTML = ``;
+      setTimeout(wireMemoryRowClicks, 0);
     }
 
     function renderStopBuying(){
       setQuickChips("");
+      try{ modal.querySelector('.sheet')?.classList.add('singlePane'); }catch(e){}
       modalTitle.textContent="Stop Buying"; modalSub.textContent="Units that require perfect discipline";
-      leftTitle.textContent="High Risk Units"; leftBadge.textContent="Discipline Required"; setBadge(leftBadge,"Low");
-      leftIntro.textContent="Not ‘bad cars’ — units your store history says leak profit unless bought perfectly.";
-      const rows = STOP_BUYING_UNITS.map(x=>`
-        <div style="padding:10px; border:1px solid rgba(255,255,255,.10); border-radius:14px; background: rgba(255,255,255,.03); cursor:pointer;"
-             onclick="window.__drillMemory('${x.vin}')">
-          <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <div style="font-size:13px; color:rgba(238,243,251,.92)">${x.ymmt}</div>
-              <div style="font-size:12px; color:rgba(215,224,236,.82); font-family: var(--mono)">${x.vin}</div>
+      leftTitle.textContent="Coverage Breakdown"; leftBadge.textContent="Discipline Required"; setBadge(leftBadge,"Low");
+      leftIntro.textContent="";
+  
+      const list = STOP_BUYING_UNITS.filter(x=>x && VIN_DATA && VIN_DATA[x.vin]);
+      const b = (window.__storeBaselines||{});
+      const baselineStrip = `
+        <div class="proofStripHdr" aria-label="Store baseline proof strip">
+          <span class="itag">Store median front: <b>${Number.isFinite(b.FG_med)?fmtMoney(Math.round(b.FG_med)):"—"}</b></span>
+          <span class="itag">Store median days: <b>${Number.isFinite(b.DTS_med)?Math.round(b.DTS_med):"—"}</b></span>
+          <span class="itag">Store median recon: <b>${Number.isFinite(b.Recon_med)?fmtMoney(Math.round(b.Recon_med)):"—"}</b></span>
+        </div>
+      `;
+      const rows = list.map(x=>{
+        const p = x.proof || {};
+        const fg = Number.isFinite(p.fg_mean) ? fmtMoney(Math.round(p.fg_mean)) : "—";
+        const dts = Number.isFinite(p.dts_med) ? Math.round(p.dts_med)+"d" : "—";
+        const rc = Number.isFinite(p.rc_med) ? fmtMoney(Math.round(p.rc_med)) : "—";
+        const fgTone = (Number.isFinite(p.fg_mean) && Number.isFinite(p.FG_med) && p.fg_mean <= p.FG_med) ? "bad" : "warn";
+        const dtsTone = (Number.isFinite(p.dts_med) && Number.isFinite(p.DTS_med) && p.dts_med >= p.DTS_med) ? "bad" : "warn";
+        const rcTone = (Number.isFinite(p.rc_med) && Number.isFinite(p.Recon_med) && p.rc_med >= p.Recon_med) ? "bad" : "warn";
+        const tailTone = (Number.isFinite(p.pctOver60) && p.pctOver60 >= 0.25) ? "bad" : "warn";
+        const tailTxt = Number.isFinite(p.pctOver60) ? Math.round(p.pctOver60*100)+'%' : '—';
+        return `
+          <div class="segCard" data-memrow="1" data-vin="${x.vin}" data-ctx="stop">
+            <div class="segTop">
+              <div style="display:flex; flex-direction:column;">
+                <div class="segTitle">${escapeHtml((x.segmentLabel||x.segment||x.ymmt||"Segment"))}</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; min-width:120px;">
+                <span class="itag bad">${escapeHtml(x.flag||"High Risk Buy")}</span>
+                <span class="itag warn">Discipline Required</span>
+              </div>
             </div>
-            <div class="badge bad">${x.flag}</div>
+
+            <div class="proofStrip" aria-label="Proof points">
+              <span class="itag ${fgTone}">Front: <b>${fg}</b></span>
+              <span class="itag ${dtsTone}">Days: <b>${dts}</b></span>
+              <span class="itag ${rcTone}">Recon: <b>${rc}</b></span>
+              <span class="itag ${tailTone}">60+ day tail: <b>${tailTxt}</b></span>
+            </div>
+
+            <div class="segWhy"><b>Signal:</b> ${x.signal || "—"}</div>
+            <div class="segWhy" style="margin-top:4px;"><b>Impact:</b> ${x.impact || "—"}</div>
+            <div class="segWhy" style="margin-top:4px;"><b>Guidance:</b> ${x.guidance || "—"}</div>
           </div>
-          <div style="margin-top:8px; font-size:12px; color:rgba(215,224,236,.82)"><strong>Signal:</strong> ${x.signal}</div>
-          <div style="margin-top:4px; font-size:12px; color:rgba(215,224,236,.82)"><strong>Impact:</strong> ${x.impact}</div>
-          <div style="margin-top:6px; font-size:12px; color:rgba(215,224,236,.78)"><strong>Guidance:</strong> ${x.guidance}</div>
-        </div>`).join("");
-      leftKv.innerHTML=""; leftExtra.innerHTML=`<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">${rows}</div>`;
-      rightTitle.textContent="What this means"; rightBadge.textContent="Protect margin"; setBadge(rightBadge,"Low");
-      rightBody.innerHTML=`<div class="foot">Outcome protects your discipline. If you buy these, do it clean and inside the line — or don’t buy them at all.</div>
-                           <div class="foot" style="margin-top:10px;">Click a unit to open Outcome Memory and see the exact leakage pattern.</div>`;
+        `;
+      }).join("");
+      const rowsHtmlStop = rows || '<div class="foot">No Stop Buying segments yet — connect more store history to activate this list.</div>';
+      leftKv.innerHTML="";
+      leftExtra.innerHTML = `${baselineStrip}<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">${rowsHtmlStop}</div>`;
+      rightTitle.textContent=''; rightBadge.textContent='';
+      rightBody.innerHTML = ``;
+      setTimeout(wireMemoryRowClicks, 0);
     }
 
+    
+
     function renderCOI(){
-      setQuickChips("");
-      modalTitle.textContent="Cost of Inaction"; modalSub.textContent="Specific leakage tied to vehicles";
-      leftTitle.textContent="Leakage Breakdown"; leftBadge.textContent="What is leaking now"; setBadge(leftBadge,"Medium");
-      leftIntro.textContent="These are the specific vehicles/profiles causing the biggest leakage right now. Click any row to open Outcome Memory.";
-      const rows = COI_BREAKDOWN.map(x=>`
-        <div style="display:flex; flex-direction:column; gap:6px; padding:10px; border:1px solid rgba(255,255,255,.10); border-radius:14px; background: rgba(255,255,255,.03); cursor:pointer;"
-             onclick="window.__drillMemory('${x.vin}')">
-          <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <div style="font-size:13px; color:rgba(238,243,251,.92)">${x.ymmt}</div>
-              <div style="font-size:12px; color:rgba(215,224,236,.82); font-family: var(--mono)">${x.vin}</div>
-            </div>
-            <div style="font-size:16px; font-weight:760; color:rgba(238,243,251,.95)">${x.leakage}</div>
-          </div>
-          <div style="font-size:12px; color:rgba(215,224,236,.78)">${x.why}</div>
-          <div style="font-size:12px; color:rgba(215,224,236,.86)"><strong>Do this:</strong> ${x.action}</div>
-        </div>`).join("");
-      const total = COI_BREAKDOWN.reduce((acc,x)=> acc + (parseMoney(x.leakage)||0), 0);
-      leftKv.innerHTML = kvCard("Total Leakage", fmtMoney(total), "If you don’t change behavior on these vehicles.") +
-                         kvCard("Immediate Fix", "Speed + discipline", "Move same-day and stop stretching above the line.");
-      leftExtra.innerHTML=`<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">${rows}</div>`;
-      rightTitle.textContent="Next actions"; rightBadge.textContent="Do this now"; setBadge(rightBadge,"High");
-      rightBody.innerHTML=`<div class="foot"><strong>1) Click any vehicle</strong><br/>Outcome Memory opens with the discipline line + guardrail in one screen.</div>
-                           <div class="foot" style="margin-top:10px;"><strong>2) Use Gross Goal</strong><br/>If you want $3,000, Outcome tightens discipline accordingly.</div>
-                           <div class="foot" style="margin-top:10px;"><strong>3) Capture intake every time</strong><br/>Seller ask + mileage + condition notes — so memory grows and decisions get faster.</div>`;
+      const total = COI_TOTAL || 0;
+      const totalFmt = fmtMoney(total);
+
+      modalTitle.textContent = 'Cost of Inaction';
+      modalSubtitle.textContent = 'Store total — leakage from doing nothing';
+      leftTitle.textContent = 'COI Directional Preview';
+      rightTitle.textContent = 'What to do next';
+
+      // Keep labels clean: show dollars INSIDE the preview card (single source of truth)
+      leftBadge.textContent = 'Cost of Doing Nothing';
+      rightBadge.textContent = 'Action Plan';
+
+      leftBody.innerHTML = renderCOIRightPanel('store', totalFmt);
+
+      rightBody.innerHTML = ``;
+      modal.classList.add('show');
     }
 
     function openRoadmap(){
@@ -1801,12 +3519,19 @@ if(currentView) viewStack.push(currentView);
     function saveGross(){ grossGoal=Math.max(0, Number(grossInput.value||0)); grossGoalText.textContent=fmtMoney(grossGoal); closeGross(); }
     grossGoalText.textContent = fmtMoney(grossGoal);
 
-    window.__drillMemory = (vin)=>{ vinInput.value=vin; navigate(renderMemory,[vin]); };
+    window.__drillMemory = (vin, ctx)=>{
+      window.__memoryContext = ctx || 'memory';
+      window.__CURRENT_VIN = (vin||'').trim().toUpperCase();
+      navigate(renderMemory,[vin]);
+    };
 
     // Initialize Data Readiness tile (demo coverage until real data is ingested)
     updateReadinessTile();
 
-    btnAnalyze.addEventListener('click', ()=>navigate(renderMemory,[vinInput.value]));
+    btnAnalyze.addEventListener('click', ()=>{
+    const vin = (vinInput?.value || '').trim();
+    openVinSuperModal(vin || __demoVIN);
+  });
     btnAssist.addEventListener('click', ()=>navigate(renderAssist,[vinInput.value]));
     document.getElementById('tileAcquire').addEventListener('click', ()=>navigate(renderAcquireNow,[]));
     document.getElementById('tileStop').addEventListener('click', ()=>navigate(renderStopBuying,[]));
@@ -1841,7 +3566,7 @@ if(currentView) viewStack.push(currentView);
       if(!track) return;
 
       const pills = TOP_INSIGHTS.map((x, idx)=>`
-        <div class="ipill" onclick="window.__openInsight(${idx})" title="Click to expand">
+        <div class="ipill" data-insight-idx="${idx}" role="button" tabindex="0" title="Click to expand">
           <span class="itag ${x.tone}">${x.tag}</span>
           <span>${x.text}</span>
         </div>
@@ -1849,6 +3574,29 @@ if(currentView) viewStack.push(currentView);
 
       // Duplicate content so the CSS scroll can loop seamlessly.
       track.innerHTML = pills + pills;
+
+      // Hard-wire interactions on the track itself (more reliable than document delegation).
+      if(!track.__wired){
+        track.__wired = true;
+        track.addEventListener('click', (e)=>{
+          const pill = e.target && e.target.closest ? e.target.closest('.ipill[data-insight-idx]') : null;
+          if(!pill) return;
+          const idx = Number(pill.getAttribute('data-insight-idx'));
+          if(Number.isFinite(idx) && typeof window.__openInsight === 'function'){
+            window.__openInsight(idx);
+          }
+        });
+        track.addEventListener('keydown', (e)=>{
+          if(e.key !== 'Enter' && e.key !== ' ') return;
+          const pill = e.target && e.target.closest ? e.target.closest('.ipill[data-insight-idx]') : null;
+          if(!pill) return;
+          e.preventDefault();
+          const idx = Number(pill.getAttribute('data-insight-idx'));
+          if(Number.isFinite(idx) && typeof window.__openInsight === 'function'){
+            window.__openInsight(idx);
+          }
+        });
+      }
     }
 
     window.__openInsight = (idx)=>{
@@ -1856,6 +3604,25 @@ if(currentView) viewStack.push(currentView);
       if(!x) return;
       navigate(renderInsightDetail, [x]);
     };
+    // Top Insights click delegation (avoids inline onclick issues)
+    if(!window.__insightDelegationBound){
+      window.__insightDelegationBound = true;
+      document.addEventListener('click', (e)=>{
+        const pill = e.target && e.target.closest ? e.target.closest('.ipill[data-insight-idx]') : null;
+        if(!pill) return;
+        const idx = Number(pill.getAttribute('data-insight-idx'));
+        if(Number.isFinite(idx)) window.__openInsight(idx);
+      });
+      document.addEventListener('keydown', (e)=>{
+        if(e.key !== 'Enter' && e.key !== ' ') return;
+        const pill = e.target && e.target.closest ? e.target.closest('.ipill[data-insight-idx]') : null;
+        if(!pill) return;
+        e.preventDefault();
+        const idx = Number(pill.getAttribute('data-insight-idx'));
+        if(Number.isFinite(idx)) window.__openInsight(idx);
+      });
+    }
+
 
     function renderInsightDetail(x){
       modalTitle.textContent = "Insight";
@@ -1863,16 +3630,13 @@ if(currentView) viewStack.push(currentView);
 
       setQuickChips(chip("Type", x.tag, x.tone) + chip("Where to go", x.drill, "warn"));
 
-      leftTitle.textContent = "What Outcome is telling you";
+      leftTitle.textContent="Coverage Breakdown";
       leftBadge.textContent = "Store-specific pattern";
       setBadge(leftBadge, "High");
       leftIntro.textContent = x.text;
 
-      leftKv.innerHTML =
-        kvCard("Why it matters", "Profit + speed", "These are the behaviors that create margin or leakage.") +
-        kvCard("What to do next", "Click below", "Outcome takes you straight to the module that proves it.");
-
-      const drillMap = {
+      leftKv.innerHTML="";
+  const drillMap = {
         "Acquire": { label:"Open Acquire Now", fn: ()=>navigate(renderAcquireNow, []) },
         "Stop": { label:"Open Stop Buying", fn: ()=>navigate(renderStopBuying, []) },
         "COI": { label:"Open Cost of Inaction", fn: ()=>navigate(renderCOI, []) },
@@ -1896,23 +3660,37 @@ if(currentView) viewStack.push(currentView);
 
       window.__insightDrill = ()=>{ d.fn(); };
 
-      rightTitle.textContent = "Talk track";
-      rightBadge.textContent = "10 seconds";
-      setBadge(rightBadge, "Medium");
-      rightBody.innerHTML = `
-        <div class="foot">
-          “Outcome isn’t another book value tool — it’s your store’s memory. It tells you where you’ve leaked profit on this profile and what line protects you.”
-        </div>
-        <div class="foot" style="margin-top:10px;">
-          “If you want to hit ${grossGoalText.textContent} front, Outcome tightens the discipline line so you don’t guess.”
-        </div>
-      `;
-
-      setDial("High");
+      rightTitle.textContent=""; rightBadge.textContent="";
+  rightBody.innerHTML=""; if(typeof rightCol!=="undefined" && rightCol) rightCol.style.display="none";
+setDial("High");
     }
 
 
     (function init(){
+
+// Build Acquire/Stop lists from VIN_DATA using locked thresholds (mutates arrays; no wiring changes)
+try{
+  if(typeof buildListsFromVinData === "function"){
+    const lists = buildListsFromVinData();
+    if(lists && Array.isArray(lists.acquire) && lists.acquire.length){
+      ACQUIRE_NOW.splice(0, ACQUIRE_NOW.length, ...lists.acquire);
+    }
+    if(lists && Array.isArray(lists.stop) && lists.stop.length){
+      STOP_BUYING_UNITS.splice(0, STOP_BUYING_UNITS.length, ...lists.stop);
+    }
+  }
+}catch(e){
+  // If anything goes wrong, fall back to demo lists so UI/wiring never breaks.
+  console.warn("Decision list build failed; using demo lists.", e);
+}      // Sync tile counts to the same eligibility rules used in the modals
+      const acqEligible = (typeof ACQUIRE_NOW!=="undefined") ? ACQUIRE_NOW.filter(x=>x && VIN_DATA && VIN_DATA[x.vin]).length : 0;
+      const stopEligible = (typeof STOP_BUYING_UNITS!=="undefined") ? STOP_BUYING_UNITS.filter(x=>x && VIN_DATA && VIN_DATA[x.vin]).length : 0;
+      const acqTileVal = document.querySelector("#tileAcquire .v");
+      if(acqTileVal) acqTileVal.textContent = String(acqEligible);
+
+      const stopTileVal = document.querySelector("#tileStop .v");
+      if(stopTileVal) stopTileVal.textContent = String(stopEligible);
+
       updateCOITile();
       renderTicker();
       const d = VIN_DATA[(vinInput.value||"").trim().toUpperCase()];
@@ -1927,5 +3705,712 @@ if(currentView) viewStack.push(currentView);
     })();
   
 </script>
+
+  <!-- COI Store Modal (separate, reliable open) -->
+  <div class="modal" id="coiStoreModal" aria-hidden="true">
+    <div class="sheet">
+      <div class="modalTop">
+        <div class="modalTitle">
+          <div class="kicker">COST OF INACTION</div>
+          <div class="sub">Store total — leakage from doing nothing</div>
+        </div>
+        <button class="btnGhost" data-close-coi>Close</button>
+      </div>
+
+      <div class="modalBody twoCol">
+        <div class="panel">
+          <div class="panelHdr">
+            <div class="panelLabel">COMBINED LEAKAGE (THIS MONTH)</div>
+            <span class="pill pill--coi" id="coiStorePill">Cost of Inaction: $0</span>
+          </div>
+
+          <div class="muted">This is the cost of NOT acting when Outcome tells you to. It includes missed buys and bad holds.</div>
+
+          <div class="statGrid" style="margin-top:12px">
+            <div class="stat">
+              <div class="stat__k">TOTAL LEAKAGE</div>
+              <div class="stat__v" id="coiStoreTotal">$0</div>
+              <div class="stat__s">If you do nothing, this is what you leak.</div>
+            </div>
+            <div class="stat">
+              <div class="stat__k">DECISION FIX</div>
+              <div class="stat__v" style="font-size:16px">BUY / DON'T BUY</div>
+              <div class="stat__s">Faster action + tighter discipline.</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="coiCard">
+            <div class="coiInsight">Here’s the leak: you’re leaking <span id="coiStoreLeakInline">$0</span> this month by ignoring clear actions.</div>
+            <div class="coiMuted">Passing on winners + holding losers</div>
+
+            <div class="coiMetaGrid">
+              <div class="meta"><div class="metaK">LEAK TYPE</div><div class="metaV">Missed Buys</div></div>
+              <div class="meta"><div class="metaK">LEAK TYPE</div><div class="metaV">Bad Holds</div></div>
+              <div class="meta"><div class="metaK">DECISION FIX</div><div class="metaV">BUY / DON'T BUY</div></div>
+              <div class="meta"><div class="metaK">OUTCOME FIX</div><div class="metaV">Act faster</div></div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="muted"><b>Dealer-simple:</b> You’re losing money two ways — by passing on good cars and keeping bad ones.</div>
+        </div>
+
+        <div class="panel">
+          <div class="panelHdr">
+            <div class="panelLabel">WHAT TO DO NEXT</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="pill pill--warn">Action Plan</span>
+            </div>
+          </div>
+
+          <div class="muted">Turn leakage into actions. These buttons jump you straight into the workflows.</div>
+
+          <div class="actionRow">
+            <button class="actionBtn actionBtn--primary" data-open-acquire>Open Acquire Now</button>
+            <button class="actionBtn actionBtn--primary" data-open-stop>Open Stop Buying</button>
+            <button class="actionBtn actionBtn--warn" data-open-buydecision>Open Buy Decision</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="muted">
+            Dealer-simple: You’re losing money two ways — passing on winners and holding losers. Fix is faster decisions.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- VIN SUPER MODAL (One VIN = One Screen) -->
+  <div id="vinSuperModal" class="omodal" aria-hidden="true">
+    <div class="omodal__sheet">
+      <div class="omodal__top">
+        <button class="btn--ghost" data-close-super>← Back</button>
+        <div class="omodal__title">
+          <div class="kicker">VIN INTELLIGENCE</div>
+          <div class="headline">
+            <span class="mono">VIN:</span> <span id="sv_vin" class="mono">—</span>
+            <span class="dotSep">•</span>
+            <span id="sv_title">—</span>
+          </div>
+        </div>
+        <button class="btn--ghost" data-close-super>Close</button>
+      </div>
+
+      <div class="superGrid">
+        <!-- 1) OUTCOME MEMORY -->
+        <section class="pane" id="sv_memPane">
+          <!-- filled by JS -->
+        </section>
+
+        <!-- 2) BUY DECISION -->
+        <section class="pane" id="sv_bdPane">
+          <!-- filled by JS -->
+        </section>
+
+        <!-- 3) SOURCING + COI -->
+        <section class="pane" id="sv_rightPane">
+          <!-- filled by JS -->
+        </section>
+      </div>
+    </div>
+  </div>
+
+
+<!-- Hidden Admin: ROI Tuning (Ctrl+Alt+O or click title 5x) -->
+<div id="adminOverlay" class="overlay" style="display:none; z-index:99999;">
+  <div class="modalShell" style="max-width:860px;">
+    <div class="modalHeader">
+      <div>
+        <div class="modalTitle">ROI Tuning (Hidden)</div>
+        <div class="modalSub">Adjust defaults used by Buy-To / Cost math. Saved locally in this browser.</div>
+      </div>
+      <button class="btn ghost" id="adminCloseBtn">Close</button>
+    </div>
+    <div class="modalBody" style="padding:16px 18px 18px;">
+      <div class="grid3" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+        <div class="card" style="padding:14px;">
+          <div class="kicker">Daily carry cost</div>
+          <div class="subtle" style="margin-top:4px;">$/day used for carry downside math</div>
+          <input id="setDailyCarry" type="number" step="1" min="0" class="input" style="margin-top:10px; width:100%;" />
+        </div>
+        <div class="card" style="padding:14px;">
+          <div class="kicker">Target days</div>
+          <div class="subtle" style="margin-top:4px;">Days threshold before carry penalty</div>
+          <input id="setTargetDays" type="number" step="1" min="0" class="input" style="margin-top:10px; width:100%;" />
+        </div>
+        <div class="card" style="padding:14px;">
+          <div class="kicker">Min profit (High)</div>
+          <div class="subtle" style="margin-top:4px;">$ floor in Buy-To math (High band)</div>
+          <input id="setMinProfitHigh" type="number" step="50" min="0" class="input" style="margin-top:10px; width:100%;" />
+        </div>
+        <div class="card" style="padding:14px;">
+          <div class="kicker">Min profit (Medium)</div>
+          <div class="subtle" style="margin-top:4px;">$ floor in Buy-To math (Medium band)</div>
+          <input id="setMinProfitMed" type="number" step="50" min="0" class="input" style="margin-top:10px; width:100%;" />
+        </div>
+        <div class="card" style="padding:14px;">
+          <div class="kicker">Min profit (Limited)</div>
+          <div class="subtle" style="margin-top:4px;">$ floor in Buy-To math (Limited band)</div>
+          <input id="setMinProfitLim" type="number" step="50" min="0" class="input" style="margin-top:10px; width:100%;" />
+        </div>
+        <div class="card" style="padding:14px;">
+          <div class="kicker">Actions</div>
+          <div class="subtle" style="margin-top:4px;">Applies immediately to UI</div>
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <button class="btn" id="adminSaveBtn">Save + Apply</button>
+            <button class="btn ghost" id="adminResetBtn">Reset defaults</button>
+            <a class="btn ghost" id="adminSpecLink" href="outcome_metrics_spec.pdf" target="_blank" rel="noopener">Open Metrics PDF</a>
+          </div>
+          <div class="subtle" style="margin-top:10px;">Tip: this is hidden from dealers. Shortcut: <b>Ctrl+Alt+O</b></div>
+        </div>
+      </div>
+
+      <div class="divider" style="margin:16px 0;"></div>
+      <div class="subtle">These settings drive: carry penalties, profit floors, and VIN downside/COI demo values. When real data lands, the same knobs will tune the exact formulas without changing any modals.</div>
+    </div>
+  </div>
+</div>
+
 </body>
+
+<script>
+(function(){
+  const $ = (sel,root=document)=>root.querySelector(sel);
+  const coiModal = $('#coiStoreModal');
+  const tileCOI = $('#tileCOI');
+  const coiTileValue = $('#coiTileValue');
+
+  if(!coiModal || !tileCOI) return;
+
+  function openCOIStore(){
+    // COI Store modal uses the same .modal.open mechanics as other modals (not aria-hidden display toggling)
+    if(!coiModal) return;
+    coiModal.classList.add('open');
+    coiModal.setAttribute('aria-hidden','false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeCOIStore(){
+    if(!coiModal) return;
+    coiModal.classList.remove('open');
+    coiModal.setAttribute('aria-hidden','true');
+    document.body.style.overflow = '';
+  }
+
+  // Guaranteed open even if main modal renderCOI has issues
+  tileCOI.addEventListener('click', function(e){
+    // Let Cmd/Ctrl-click do nothing special; always open modal
+    e.preventDefault();
+    e.stopPropagation();
+    openCOIStore();
+  }, true);
+
+  document.addEventListener('click', (e)=>{
+    if(e.target && e.target.matches('[data-close-coi]')) closeCOIStore();
+    if(e.target === coiModal) closeCOIStore();
+  });
+
+  // expose COI controls for cross-modal actions
+  window.__openCOIStore = openCOIStore;
+  window.__closeCOIStore = closeCOIStore;
+})();
+
+    // ===== VIN SUPER MODAL wiring =====
+    (function(){
+      const superModal = document.getElementById('vinSuperModal');
+      const setText = (id, val)=>{ const el=document.getElementById(id); if(el) el.textContent = (val==null||val==='') ? '—' : String(val); };
+
+      function openVinSuperModal(vin, ctx){
+        const v = (vin||'').trim().toUpperCase();
+        if(!v) return;
+        window.__activeVin = v;
+        window.__memoryContext = (ctx||'memory').toLowerCase();
+
+        // header
+        setText('sv_vin', v);
+        const meta = VIN_DATA[v] || {};
+        setText('sv_title', meta.ymmt || getVehicle(v) || 'Vehicle');
+
+        // build panes
+        const memPane = document.getElementById('sv_memPane');
+        const bdPane = document.getElementById('sv_bdPane');
+        const rightPane = document.getElementById('sv_rightPane');
+        if(memPane) memPane.innerHTML = buildOutcomeMemoryPane(v);
+        if(bdPane) bdPane.innerHTML = buildBuyDecisionPane(v);
+        if(rightPane) rightPane.innerHTML = buildRightPane(v, window.__memoryContext);
+
+        // show
+        if(superModal) superModal.setAttribute('aria-hidden','false');
+      }
+
+      function closeVinSuperModal(){
+        if(superModal) superModal.setAttribute('aria-hidden','true');
+      }
+
+      // close controls
+      document.addEventListener('click', (e)=>{
+        if(e.target && e.target.matches && e.target.matches('[data-close-super]')) closeVinSuperModal();
+        if(superModal && e.target === superModal) closeVinSuperModal();
+      });
+
+      // Replace drill behavior from Acquire/Stop vehicle rows
+      window.__drillMemory = function(vin, ctx){
+        openVinSuperModal(vin, ctx);
+      };
+
+      // expose
+      window.openVinSuperModal = openVinSuperModal;
+      window.closeVinSuperModal = closeVinSuperModal;
+
+      // Builders
+      function buildOutcomeMemoryPane(v){
+        const d = VIN_DATA[v] || { ymmt:getVehicle(v), rec:'—', confidence:'Low', buyTo:'—', owned:'0 units', front:'—', recon:'—', days:'—', loss:'—', coi:'—', risk:'—', turn:'—', reconVar:'—' };
+
+// VIN Confidence = action strength (Buy Decision %) for this VIN/profile.
+// Segment Signal (if present) = reliability of the segment pattern that surfaced it.
+const bdForVin = (()=>{ try{ return buyDecisionFromRisk(d.risk); }catch(e){ return {conf:0,label:'',why:''}; } })();
+const vinPct = Number(bdForVin.conf || 0);
+const vinBand = (vinPct>=75) ? 'High' : (vinPct>=60) ? 'Medium' : 'Limited';
+const vinTone = (vinBand==='High') ? 'pill--good' : (vinBand==='Medium') ? 'pill--warn' : 'pill--bad';
+// Prefer segment-level confidence when coming from Acquire/Stop segment cards
+const segBandRaw = (window.__activeSegmentConf || '').toString().toLowerCase();
+const segBand = segBandRaw ? (segBandRaw.charAt(0).toUpperCase() + segBandRaw.slice(1)) : '';
+        const peer = PEER_CONTEXT[v] || {label:'—', note:'Peer context becomes available as the dataset expands.'};
+        const src = sourceForVin(v);
+        const srcLabel = src.label || '—';
+
+        // Guardrail text (simple demo logic)
+        const guard = (d.buyTo && d.buyTo!=='—') ? 'Within Guardrail' : 'No Guardrail';
+        const sig = signalBandForVin(v);
+        const memConf = segBand || sig.band;
+        const limited = (memConf==='Limited') ? limitedSignalBanner(sig) : '';
+
+        return `
+          <div class="pane__hdr">
+            <div class="pane__label">OUTCOME MEMORY</div>
+            <span class=\"pill ${vinTone}\">VIN Confidence: ${vinBand}</span>${segBand?` <span class=\"pill ${memConf==='High'?'pill--good':(memConf==='Medium'?'pill--warn':(memConf==='Limited'?'pill--bad':'pill--warn'))}\" style=\"margin-left:8px;\">Segment Signal: ${memConf}</span>`:''}
+          </div>
+
+          ${limited}
+
+          <div class="chipGrid">
+            <div class="chip"><div class="chip__k">RISK</div><div class="chip__v">${d.risk||'—'}</div></div>
+            <div class="chip"><div class="chip__k">TURN</div><div class="chip__v">${d.turn||'—'}</div></div>
+            <div class="chip"><div class="chip__k">RECON</div><div class="chip__v">${d.reconVar||'—'}</div></div>
+            <div class="chip"><div class="chip__k">GUARDRAIL</div><div class="chip__v">${guard}</div></div>
+            <div class="chip"><div class="chip__k">PEERS</div><div class="chip__v">${peer.label||'—'}</div></div>
+            <div class="chip"><div class="chip__k">SOURCE</div><div class="chip__v">${srcLabel}</div></div>
+          </div>
+
+          <div class="muted">${d.rec || 'Store history found. Outcome is summarizing how this profile behaves in your store.'}</div>
+
+          <div class="statGrid">
+            <div class="stat"><div class="stat__k">OWNED</div><div class="stat__v">${d.owned||'—'}</div><div class="stat__s">How many times your store has owned this profile.</div></div>
+            <div class="stat"><div class="stat__k">AVG FRONT</div><div class="stat__v">${d.front||'—'}</div><div class="stat__s">Your store’s average front gross when you retail it.</div></div>
+            <div class="stat"><div class="stat__k">AVG RECON</div><div class="stat__v">${d.recon||'—'}</div><div class="stat__s">Typical recon spend for this profile.</div></div>
+            <div class="stat"><div class="stat__k">AVG DAYS</div><div class="stat__v">${d.days||'—'}</div><div class="stat__s">How long it usually takes to sell.</div></div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="muted"><b>Loss Insight:</b> ${d.loss||'—'}</div>
+          <div class="muted" style="margin-top:8px;"><b>Peer Context:</b> ${peer.note||'—'}</div>
+          <div class="muted" style="margin-top:8px;"><b>Auction Guardrail:</b> Discipline line: ${d.buyTo||'—'}</div>
+        `;
+      }
+
+      function buyDecisionFromRisk(risk){
+        const r = String(risk||'').toLowerCase();
+        if(r==='low') return {label:'BUY THIS', tone:'good', conf:78, why:'Known winner profile. Cash comes back fast.'};
+        if(r==='medium') return {label:'BUY TIGHT', tone:'warn', conf:62, why:'Viable if bought inside line and recon stays in check.'};
+        return {label:"DON'T BUY", tone:'bad', conf:44, why:'Pattern risk is high. Tight margin + recon variance.'};
+      }
+
+      function buildBuyDecisionPane(v){
+        const d = VIN_DATA[v] || {};
+        const bd = buyDecisionFromRisk(d.risk);
+        const pct = Number(bd.conf||0);
+        const tone = (pct>=75) ? 'good' : (pct>=60) ? 'warn' : 'bad';
+        const buyTo = d.buyTo || '—';
+        const walk = d.walkAway || '—';
+
+        return `
+          <div class="pane__hdr">
+            <div class="pane__label">BUY DECISION</div>
+          </div>
+
+          <div class="bdHero">
+            <div class="bdScore ${tone}">
+              <div class="bdPct">${pct}%</div>
+              <div class="bdLbl">Buy Decision</div>
+            </div>
+            <div class="bdLine">
+              <div class="k">BUY-TO</div>
+              <div class="v">${buyTo}</div>
+              <div class="s">Discipline line from store patterns. Walk-away: <b>${walk}</b></div>
+            </div>
+          </div>
+
+          <div class="muted" style="margin-top:10px;"><b>Outcome Says:</b> ${bd.label}</div>
+          <div class="muted" style="margin-top:8px;">${bd.why}</div>
+
+          <div class="divider"></div>
+          <div class="pane__label" style="margin-bottom:8px;">WHAT'S DRIVING THIS VIN DECISION</div>
+          <div class="muted">• How fast cars like this sell: <b>${d.turn||'—'}</b></div>
+          <div class="muted">• How tight the margin gets: <b>${d.front||'—'}</b> avg front</div>
+          <div class="muted">• Whether recon comes back: <b>${d.reconVar||'—'}</b></div>
+          <div class="muted">• How often this store gets hurt: <b>${d.risk||'—'}</b> risk</div>
+
+          <div class="divider"></div>
+          <div class="muted"><b>What usually happens next:</b> ${d.loss || 'Outcome tracks what happens next as you transact more of these.'}</div>
+        `;
+      }
+
+      function buildSourcingCards(v){
+        const src = sourceForVin(v);
+        // Support multiple types
+        const cards = [];
+        const add = (k,val)=>{ if(val==null||val==='') return; cards.push({k,val}); };
+        add('CUSTOMER', src.customerLast || src.customer || '—');
+        add('STATUS', src.status || '—');
+
+        if(src.type==='service'){
+          add('LAST SERVICE', src.lastService || src.when || '—');
+          add('RO #', src.ro || '—');
+          add('RO CLOSE DATE', src.roClose || '—');
+          add('SERVICE TYPE', src.serviceType || '—');
+        } else if(src.type==='service_upcoming'){
+          add('NEXT APPT', src.nextAppt || '—');
+          add('APPT ID', src.apptId || '—');
+          add('SERVICE TYPE', src.serviceType || '—');
+          add('REACQUIRE ANGLE', src.angle || '—');
+        } else if(src.type==='appraisal'){
+          add('LAST TOUCH', src.lastTouch || '—');
+          add('APPRAISAL ID', src.appraisalId || '—');
+          add('SOURCE TYPE', src.sourceType || '—');
+          add('REACQUIRE ANGLE', src.angle || '—');
+        } else {
+          add('DETAIL', src.detail || '—');
+        }
+
+        const grid = cards.map(c=>`<div class="srcCard"><div class="srcK">${c.k}</div><div class="srcV">${c.val}</div></div>`).join('');
+        return `<div class="srcGrid">${grid}</div>`;
+      }
+
+      function parseMoneySafe(x){
+        if(typeof x === 'number') return x;
+        const s = String(x||'').replace(/[^0-9.-]/g,'');
+        const n = Number(s);
+        return Number.isFinite(n) ? n : NaN;
+      }
+
+      function buildCOIPreview(ctx, dollars){
+        const label = ctx==='acquire' ? 'COST OF PASSING' : ctx==='stop' ? 'COST OF BUYING' : 'COST OF DOING NOTHING';
+        const dir = ctx==='acquire' ? 'NOT BUYING' : ctx==='stop' ? 'KEEPING / BUYING' : 'DOING NOTHING';
+        const primary = ctx==='acquire' ? 'Demand window' : ctx==='stop' ? 'Aging compression' : 'Decision lag';
+        const shows = ctx==='acquire' ? 'Missed gross' : ctx==='stop' ? 'Capital drag' : 'Leakage compounds';
+        const timing = ctx==='acquire' ? '7–14 days' : ctx==='stop' ? '14–30 days' : 'This month';
+
+        const moneyStr = (typeof dollars === 'string' && dollars.trim()) ? dollars : (Number.isFinite(dollars) ? fmtMoney(dollars) : '$—');
+
+        return `
+          <div class="pane__hdr">
+            <div class="pane__label">${label}</div>
+            <span class="pill pill--coi">Cost of Inaction: ${moneyStr}</span>
+          </div>
+
+          <div class="coiCard">
+            <div class="coiInsight">You lose <b>${moneyStr}</b> by ${ctx==='acquire' ? 'not buying this vehicle while demand is hot' : ctx==='stop' ? 'owning this profile when it drags performance' : 'doing nothing while leakage stacks up'}.</div>
+            <div class="coiMuted">${ctx==='acquire' ? 'Missed front gross + missed velocity window + missed share' : ctx==='stop' ? 'Aging compression + recon variance + capital drag' : 'Missed buys + bad holds + slow decisions'}</div>
+
+            <div class="coiMetaGrid">
+              <div class="meta"><div class="metaK">COI DIRECTION</div><div class="metaV">${dir}</div></div>
+              <div class="meta"><div class="metaK">PRIMARY DRIVER</div><div class="metaV">${primary}</div></div>
+              <div class="meta"><div class="metaK">HOW IT SHOWS UP</div><div class="metaV">${shows}</div></div>
+              <div class="meta"><div class="metaK">TIMING</div><div class="metaV">${timing}</div></div>
+            </div>
+          </div>
+        `;
+      }
+
+      function buildRightPane(v, ctx){
+        const d = VIN_DATA[v] || {};
+        const isAcquire = ctx==='acquire';
+        const isStop = ctx==='stop';
+
+        // dollars per context
+        const dollars = isAcquire ? (d.coi && d.coi!=='—' ? d.coi : '$3,420')
+                      : isStop ? (d.coiStop && d.coiStop!=='—' ? d.coiStop : '$4,180')
+                      : (d.coi && d.coi!=='—' ? d.coi : '$8,635');
+
+        if(isAcquire){
+          return `
+            <div class="pane__hdr">
+              <div class="pane__label">SOURCING</div>
+              <span class="pill pill--src">${(sourceForVin(v).label)||'—'}</span>
+            </div>
+            ${buildSourcingCards(v)}
+            <div class="divider"></div>
+            ${buildCOIPreview('acquire', dollars)}
+          `;
+        }
+        if(isStop){
+          const stopDollars = (()=>{
+            try{
+              const n = deriveVinCostOfBuying(d||{});
+              return (Number.isFinite(n) && n>0) ? fmtMoney(n) : dollars;
+            }catch(e){
+              return dollars;
+            }
+          })();
+          return `
+            ${buildCOIPreview('stop', stopDollars)}
+            <div style="margin-top:8px;font-size:12px;color:rgba(215,224,236,.7);font-family:var(--mono);">VIN: ${escapeHtml(v||'—')}</div>
+          `;
+        }
+        return `
+          ${buildCOIPreview('coi', dollars)}
+        `;
+      }
+    
+    // COI modal (action-driven) buttons
+    // Important: these buttons live inside the COI Store modal (#coiStoreModal).
+    // We must close COI first, then open the destination modal, otherwise it appears "behind" COI.
+    document.addEventListener('click', (e)=>{
+      const t = e.target;
+      if(!t || !t.matches) return;
+
+      const closeCOI = ()=>{
+        try{ window.__closeCOIStore && window.__closeCOIStore(); }catch(err){}
+      };
+      const openAfterClose = (fn)=>{
+        // Close immediately, then open on the next frame so stacking/z-index never happens.
+        closeCOI();
+        requestAnimationFrame(()=>{ setTimeout(()=>{ try{ fn && fn(); }catch(err){} }, 30); });
+      };
+
+      if(t.matches('[data-open-acquire]')){
+        e.preventDefault(); e.stopPropagation();
+        openAfterClose(()=>{ try{ navigate(renderAcquireNow); }catch(err){} });
+      }
+      if(t.matches('[data-open-stop]')){
+        e.preventDefault(); e.stopPropagation();
+        openAfterClose(()=>{ try{ navigate(renderStopBuying); }catch(err){} });
+      }
+      if(t.matches('[data-open-buydecision]')){
+        e.preventDefault(); e.stopPropagation();
+        openAfterClose(()=>{ try{ window.openVinSuperModal && window.openVinSuperModal(window.__activeVin || Object.keys(VIN_DATA||{})[0] || '', 'memory'); }catch(err){} });
+      }
+    });
+})();
+
+
+/* ---------------------------
+   Hidden Admin ROI Tuning
+   - Ctrl+Alt+O or 5x click on title area
+   - saves to localStorage
+   - applies to demo-derived COI/carry/profit floors
+---------------------------- */
+const ROI_DEFAULTS = {
+  dailyCarryCost: 45,
+  targetDays: 21,
+  minProfitHigh: 1200,
+  minProfitMed: 1500,
+  minProfitLim: 1800
+};
+
+function loadRoiSettings(){
+  try{
+    const raw = localStorage.getItem("outcome_roi_defaults_v1");
+    if(!raw) return {...ROI_DEFAULTS};
+    const obj = JSON.parse(raw);
+    return {
+      dailyCarryCost: clampNum(obj.dailyCarryCost, 0, 5000, ROI_DEFAULTS.dailyCarryCost),
+      targetDays: clampNum(obj.targetDays, 0, 365, ROI_DEFAULTS.targetDays),
+      minProfitHigh: clampNum(obj.minProfitHigh, 0, 20000, ROI_DEFAULTS.minProfitHigh),
+      minProfitMed: clampNum(obj.minProfitMed, 0, 20000, ROI_DEFAULTS.minProfitMed),
+      minProfitLim: clampNum(obj.minProfitLim, 0, 20000, ROI_DEFAULTS.minProfitLim),
+    };
+  }catch(e){
+    return {...ROI_DEFAULTS};
+  }
+}
+function saveRoiSettings(s){
+  try{ localStorage.setItem("outcome_roi_defaults_v1", JSON.stringify(s)); }catch(e){}
+}
+function clampNum(v, lo, hi, fallback){
+  const n = Number(v);
+  if(!Number.isFinite(n)) return fallback;
+  return Math.min(hi, Math.max(lo, n));
+}
+
+window.__ROI = loadRoiSettings();
+
+// --- Apply to demo values (safe, non-wiring) ---
+function deriveVinCostOfBuying(v){
+  // VIN-specific downside model (demo + production-ready structure).
+  // Important: self-contained parsing (does NOT rely on any modal-scoped helpers).
+  const roi = (window.__ROI && typeof window.__ROI === 'object') ? window.__ROI : ROI_DEFAULTS;
+
+  const num = (x)=>{
+    if(typeof x === 'number') return x;
+    const s = String(x||'').replace(/[^0-9.-]/g,'');
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const intNum = (x)=>{
+    const n = num(x);
+    return Number.isFinite(n) ? Math.round(n) : 0;
+  };
+
+  const targetDays = Number.isFinite(Number(roi.targetDays)) ? Number(roi.targetDays) : ROI_DEFAULTS.targetDays;
+  const dailyCarry = Number.isFinite(Number(roi.dailyCarryCost)) ? Number(roi.dailyCarryCost) : ROI_DEFAULTS.dailyCarryCost;
+  const minHigh = Number.isFinite(Number(roi.minProfitHigh)) ? Number(roi.minProfitHigh) : ROI_DEFAULTS.minProfitHigh;
+  const minMed  = Number.isFinite(Number(roi.minProfitMed))  ? Number(roi.minProfitMed)  : ROI_DEFAULTS.minProfitMed;
+  const minLim  = Number.isFinite(Number(roi.minProfitLim))  ? Number(roi.minProfitLim)  : ROI_DEFAULTS.minProfitLim;
+
+  const days = intNum(v?.days);
+  const carry = Math.max(0, (days - targetDays)) * dailyCarry;
+
+  const front = num(v?.front);
+  const recon = num(v?.recon);
+
+  const conf = String(v?.confidence||'').toLowerCase();
+  const minProfit = (conf==='high') ? minHigh : (conf==='medium') ? minMed : minLim;
+
+  const profitShort = Math.max(0, minProfit - front);
+  const reconOver = Math.max(0, recon - 1500); // proxy until store baselines land
+
+  const base = carry + profitShort + reconOver;
+  const n = Number(base);
+  if(!Number.isFinite(n)) return 0;
+  return Math.round(n/5)*5;
+}
+
+function applyRoiToVinData(){
+  if(typeof VIN_DATA!=="object") return;
+
+  Object.keys(VIN_DATA).forEach(vin=>{
+    const d = VIN_DATA[vin];
+    if(!d) return;
+    const cob = deriveVinCostOfBuying(d);
+
+    // Stop Buying wants "Cost of Buying", Acquire wants "Cost of Passing".
+    // For demo we keep the label "Cost of Inaction" but set the number via tuned downside.
+    // NOTE: this does NOT change any modal wiring.
+    const rec = String(d.rec||"");
+    if(rec.toLowerCase().includes("risk") || rec.toLowerCase().includes("stop") || rec.toLowerCase().includes("caution")){
+      d.coi = fmtMoney(cob);
+      // also populate stop-specific field used in VIN Intelligence right column
+      d.coiStop = d.coi;
+    }else{
+      // cost of passing proxy: upside missed (half of downside + speed bonus)
+      const speedBonus = Math.max(0, (window.__ROI.targetDays - parseNum(d.days))) * window.__ROI.dailyCarryCost;
+      d.coi = fmtMoney(Math.max(0, Math.round((cob*0.55 + speedBonus)/5)*5));
+    }
+  });
+}
+
+// Re-render helpers: rerun tiles + insights without touching modal handlers.
+function reRenderAll(){
+  try{
+    applyRoiToVinData();
+    // rebuild acquire/stop lists (counts/ordering)
+    const recs = (typeof buildSegmentRecommendations==='function') ? buildSegmentRecommendations() : {acquire: (window.__ACQUIRE||[]), stop:(window.__STOP||[])};
+    window.__ACQUIRE = recs.acquire;
+    window.__STOP = recs.stop;
+    if(typeof renderAcquireStopTiles==='function') renderAcquireStopTiles();
+    if(typeof renderAcquireModal==='function') renderAcquireModal();
+    if(typeof renderStopModal==='function') renderStopModal();
+    // If VIN view is open, re-render it using currentVin if available
+    if(window.__CURRENT_VIN){
+      if(typeof openVinIntelligence==='function') openVinIntelligence(window.__CURRENT_VIN, window.__CURRENT_CONTEXT || 'Acquire');
+    }
+  }catch(e){
+    console.warn("ROI apply failed:", e);
+  }
+}
+
+// ---- Admin UI wiring ----
+const adminOverlay = document.getElementById("adminOverlay");
+const adminCloseBtn = document.getElementById("adminCloseBtn");
+const adminSaveBtn = document.getElementById("adminSaveBtn");
+const adminResetBtn = document.getElementById("adminResetBtn");
+
+function openAdmin(){
+  if(!adminOverlay) return;
+  adminOverlay.style.display = "flex";
+  // fill inputs
+  document.getElementById("setDailyCarry").value = window.__ROI.dailyCarryCost;
+  document.getElementById("setTargetDays").value = window.__ROI.targetDays;
+  document.getElementById("setMinProfitHigh").value = window.__ROI.minProfitHigh;
+  document.getElementById("setMinProfitMed").value = window.__ROI.minProfitMed;
+  document.getElementById("setMinProfitLim").value = window.__ROI.minProfitLim;
+}
+function closeAdmin(){
+  if(!adminOverlay) return;
+  adminOverlay.style.display = "none";
+}
+
+if(adminCloseBtn) adminCloseBtn.addEventListener("click", closeAdmin);
+if(adminOverlay) adminOverlay.addEventListener("click", (e)=>{ if(e.target===adminOverlay) closeAdmin(); });
+
+if(adminSaveBtn) adminSaveBtn.addEventListener("click", ()=>{
+  const next = {
+    dailyCarryCost: clampNum(document.getElementById("setDailyCarry").value, 0, 5000, ROI_DEFAULTS.dailyCarryCost),
+    targetDays: clampNum(document.getElementById("setTargetDays").value, 0, 365, ROI_DEFAULTS.targetDays),
+    minProfitHigh: clampNum(document.getElementById("setMinProfitHigh").value, 0, 20000, ROI_DEFAULTS.minProfitHigh),
+    minProfitMed: clampNum(document.getElementById("setMinProfitMed").value, 0, 20000, ROI_DEFAULTS.minProfitMed),
+    minProfitLim: clampNum(document.getElementById("setMinProfitLim").value, 0, 20000, ROI_DEFAULTS.minProfitLim),
+  };
+  window.__ROI = next;
+  saveRoiSettings(next);
+  closeAdmin();
+  reRenderAll();
+});
+
+if(adminResetBtn) adminResetBtn.addEventListener("click", ()=>{
+  window.__ROI = {...ROI_DEFAULTS};
+  saveRoiSettings(window.__ROI);
+  reRenderAll();
+  closeAdmin();
+});
+
+document.addEventListener("keydown", (e)=>{
+  const isO = (e.key==="o" || e.key==="O");
+  // Windows/Linux: Ctrl+Alt+O
+  const winCombo = e.ctrlKey && e.altKey && isO;
+  // macOS: Cmd+Shift+O OR Cmd+Option(Alt)+O
+  const macCombo = e.metaKey && (e.shiftKey || e.altKey) && isO;
+
+  if(winCombo || macCombo){
+    e.preventDefault();
+    openAdmin();
+  }
+});
+
+// 5x click on the top title area to open admin (backup)
+let __adminClicks = 0;
+let __adminClickTimer = null;
+const titleTapTarget = document.querySelector(".top h1, .headerTitle, #brandTitle, .brandTitle, header h1");
+if(titleTapTarget){
+  titleTapTarget.style.cursor = "default";
+  titleTapTarget.addEventListener("click", ()=>{
+    __adminClicks++;
+    clearTimeout(__adminClickTimer);
+    __adminClickTimer = setTimeout(()=>{ __adminClicks=0; }, 1100);
+    if(__adminClicks>=5){
+      __adminClicks=0;
+      openAdmin();
+    }
+  });
+}
+
+// Initial apply
+applyRoiToVinData();
+
+</script>
+
 </html>
