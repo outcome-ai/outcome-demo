@@ -1331,6 +1331,25 @@ body{
       box-shadow: 0 0 0 3px rgba(106,166,255,.14), inset 0 1px 0 rgba(255,255,255,.06);
     }
     
+
+/* === Dashboard tile layout (action tiles + COI status strip) === */
+#tilesRow{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;}
+/* keep existing tile look, just center content for the two action tiles */
+#tileAcquire, #tileStop{min-height:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:18px 18px 16px;}
+#tileAcquire .t, #tileStop .t{margin:0 0 10px 0;letter-spacing:.26em;text-transform:uppercase;}
+#tileAcquire .v, #tileStop .v{margin:0;font-size:46px;font-weight:820;line-height:1;color:var(--text);}
+#tileAcquire p, #tileStop p{margin:10px 0 0 0;color:var(--muted);max-width:520px;}
+#tileAcquire .chip, #tileStop .chip{position:absolute;top:14px;right:14px;}
+
+/* COI becomes a muted, non-clickable status strip */
+#tileCOI{grid-column:1 / -1;min-height:72px;display:flex;align-items:center;justify-content:center;gap:18px;padding:18px 22px;text-align:center;cursor:default;pointer-events:none;opacity:.78;}
+#tileCOI .t{margin:0;color:rgba(215,224,236,.72);letter-spacing:.26em;text-transform:uppercase;}
+#tileCOI .v{margin:0;font-size:44px;font-weight:820;line-height:1;color:rgba(238,243,251,.86);}
+#tileCOI .m,#tileCOI .chip{display:none !important;} /* strip is status only */
+
+/* Ensure Top Insights aligns to full dashboard width */
+#insightsWrap, .insightsWrap{width:100%;max-width:1240px;margin-left:auto;margin-right:auto;}
+
 </style>
 </head>
 <body>
@@ -1425,7 +1444,7 @@ body{
       </div>
     </div>
 
-    <div class="below" aria-label="Secondary actions">
+    <div class="below" id="tilesRow" aria-label="Secondary actions">
       <div class="tile" id="tileAcquire">
         <div class="chip good">Action</div>
         <div class="t">Acquire Now</div>
@@ -1448,18 +1467,6 @@ body{
       </div>
     </div>
   </div>
-
-
-    <div class="insightsWrap" aria-label="Top store insights ticker">
-      <div class="insHead">
-        <div class="l">Top Insights</div>
-        <div class="r">Auto-scroll • hover to pause • click any insight to expand</div>
-      </div>
-      <div class="ticker">
-        <div class="track" id="insightTrack"></div>
-      </div>
-    </div>
-
 
   <div class="modal" id="modal" aria-hidden="true">
     <div class="sheet" role="dialog" aria-modal="true">
@@ -3901,12 +3908,13 @@ try{
   }
 
   // Guaranteed open even if main modal renderCOI has issues
-  tileCOI.addEventListener('click', function(e){
-    // Let Cmd/Ctrl-click do nothing special; always open modal
-    e.preventDefault();
-    e.stopPropagation();
-    openCOIStore();
-  }, true);
+  // COI is a dashboard status strip (non-clickable)
+  // tileCOI click-to-open disabled
+  // tileCOI.addEventListener('click', function(e){
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   openCOIStore();
+  // }, true);
 
   document.addEventListener('click', (e)=>{
     if(e.target && e.target.matches('[data-close-coi]')) closeCOIStore();
